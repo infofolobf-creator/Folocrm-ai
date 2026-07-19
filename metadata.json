@@ -1,0 +1,6 @@
+{
+  "name": "CRM FOLO Intelligent",
+  "description": "Système CRM intelligent de pointe au service du programme FOLO, intégrant des agents IA pour la qualification et le suivi automatique de prospects.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
