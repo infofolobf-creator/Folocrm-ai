@@ -148,6 +148,8 @@ export interface OrchestratorConfig {
   currentDailySpend: number;
   remainingFreeQuota: number;
   policies: OrchestratorPolicy;
+  learningInsights?: string[];
+  lastLearningAt?: string;
 }
 
 export interface OrchestratorPlanStep {

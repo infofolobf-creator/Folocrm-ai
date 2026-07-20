@@ -696,16 +696,119 @@ Rédige un rapport commercial sous forme de Markdown propre et aéré. Inclus :
   }
 });
 
-// --- ORCHESTRATOR ENDPOINTS ---
+// --- ORCHESTRATOR UTILS & ENDPOINTS ---
 
-// Build an execution plan using Gemini AI
+function calculateCrmMetrics(db: any) {
+  const leads = db.leads || [];
+  const campaigns = db.campaigns || [];
+  const landingPages = db.landingPages || [];
+
+  // 1. Campaign Metrics
+  const campaignMetrics = campaigns.map((c: any) => {
+    const rate = c.sentCount > 0 ? (c.responseCount / c.sentCount) * 100 : 0;
+    return {
+      name: c.name,
+      channel: c.channel,
+      sent: c.sentCount,
+      responses: c.responseCount,
+      responseRate: Number(rate.toFixed(1)),
+      status: c.status
+    };
+  });
+
+  // 2. Channel Performance
+  const channelPerformance: Record<string, { sent: number; responses: number; rate: number }> = {};
+  campaigns.forEach((c: any) => {
+    if (!channelPerformance[c.channel]) {
+      channelPerformance[c.channel] = { sent: 0, responses: 0, rate: 0 };
+    }
+    channelPerformance[c.channel].sent += c.sentCount || 0;
+    channelPerformance[c.channel].responses += c.responseCount || 0;
+  });
+  Object.keys(channelPerformance).forEach(channel => {
+    const perf = channelPerformance[channel];
+    perf.rate = perf.sent > 0 ? Number(((perf.responses / perf.sent) * 100).toFixed(1)) : 0;
+  });
+
+  // 3. Lead Conversion & Quality
+  const totalLeads = leads.length;
+  const leadStatuses = leads.reduce((acc: Record<string, number>, l: any) => {
+    acc[l.status] = (acc[l.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  const totalValue = leads.reduce((acc: number, l: any) => acc + (l.value || 0), 0);
+  
+  // High value sectors (from associated companies if available)
+  const industryPerformance: Record<string, { count: number; totalValue: number; avgScore: number; scoreCount: number }> = {};
+  leads.forEach((l: any) => {
+    const comp = db.companies?.find((c: any) => c.id === l.companyId) || { industry: "Inconnue" };
+    const ind = comp.industry || "Inconnue";
+    
+    if (!industryPerformance[ind]) {
+      industryPerformance[ind] = { count: 0, totalValue: 0, avgScore: 0, scoreCount: 0 };
+    }
+    industryPerformance[ind].count += 1;
+    industryPerformance[ind].totalValue += l.value || 0;
+    
+    const score = l.agentQualification?.score;
+    if (score !== undefined) {
+      industryPerformance[ind].avgScore += score;
+      industryPerformance[ind].scoreCount += 1;
+    }
+  });
+
+  const sectorInsights = Object.keys(industryPerformance).map(ind => {
+    const data = industryPerformance[ind];
+    return {
+      industry: ind,
+      leadsCount: data.count,
+      totalPipelineValue: data.totalValue,
+      averageScore: data.scoreCount > 0 ? Number((data.avgScore / data.scoreCount).toFixed(1)) : null
+    };
+  });
+
+  // 4. Landing Page Conversion
+  const lpPerformance = landingPages.map((lp: any) => {
+    const convRate = lp.clicks > 0 ? (lp.conversions / lp.clicks) * 100 : 0;
+    return {
+      title: lp.title,
+      clicks: lp.clicks,
+      conversions: lp.conversions,
+      conversionRate: Number(convRate.toFixed(1)),
+      theme: lp.theme
+    };
+  });
+
+  return {
+    campaignMetrics,
+    channelPerformance,
+    leadStats: {
+      totalLeads,
+      leadStatuses,
+      totalValue,
+    },
+    sectorInsights,
+    lpPerformance
+  };
+}
+
+// Build an execution plan using Gemini AI with real campaign & pipeline learning metrics
 app.post("/api/ai/orchestrator/build-plan", async (req, res) => {
   const { goalDescription, targetLeadsCount, maxBudget, useOnlyFree, mode, policies } = req.body;
 
   try {
     const ai = getGeminiClient();
+    const metrics = calculateCrmMetrics(currentDb);
+    
     const systemPrompt = `Tu es "Orchestrateur FOLO AI", l'IA supérieure de pilotage de FOLO CRM AI (focalisé sur l'Afrique de l'Ouest et l'employabilité des jeunes au Sahel).
 Ta mission est de concevoir un plan d'action d'agents multi-étapes structuré, réaliste et financièrement cadré pour atteindre l'objectif fixé par l'utilisateur.
+
+TU DOIS ANALYSER LES METRIQUES REELLES DU CRM SUIVANTES POUR CONSTRUIRE UNE STRATEGIE ADAPTEE (APPRENTISSAGE DES CAMPAGNES ET LEADS) :
+${JSON.stringify(metrics, null, 2)}
+
+Si un canal (ex: LinkedIn ou Email) a un taux de réponse historiquement supérieur dans les métriques ci-dessus, priorise-le dans les actions de rédaction/campagne.
+Si un secteur d'activité (ex: "Énergies Renouvelables" ou "Technologies & Logiciels") montre une meilleure moyenne de qualification, suggère d'orienter la recherche d'opportunités de veille vers ce secteur.
 
 Objectif de l'utilisateur : "${goalDescription || "Trouver et qualifier de nouveaux partenaires"}"
 Nombre de prospects cibles : ${targetLeadsCount || 5}
@@ -732,7 +835,7 @@ Renvoie un objet JSON strict correspondant exactement à cette structure :
   "budgetAssessment": {
     "estimatedCost": <number, coût estimé global en USD>,
     "isFeasible": <boolean, si l'objectif est faisable sous les contraintes>,
-    "reasoning": "<texte court en français expliquant l'arbitrage financier et la conformité aux politiques>",
+    "reasoning": "<texte court en français expliquant l'arbitrage financier, la conformité aux politiques, et en quoi les performances de campagnes précédentes ont guidé ce plan>",
     "quotaImpact": <number, quota d'appels ou de tokens estimé>
   },
   "steps": [
@@ -807,6 +910,80 @@ Renvoie un objet JSON strict correspondant exactement à cette structure :
   } catch (error: any) {
     console.error("AI Orchestration Plan Builder Error:", error);
     res.status(500).json({ error: error.message || "Failed to generate Orchestrator plan" });
+  }
+});
+
+// Learn from Campaigns, Leads and Sectors to build continuous strategic lessons
+app.post("/api/ai/orchestrator/learn-and-adapt", async (req, res) => {
+  try {
+    const ai = getGeminiClient();
+    const metrics = calculateCrmMetrics(currentDb);
+
+    const systemPrompt = `Tu es le "Cerveau Stratégique d'Apprentissage Continu" de FOLO CRM AI.
+Ton rôle est d'analyser froidement et scientifiquement les données de performance réelles du CRM (taux de réponse des campagnes par canal, distribution des prospects, secteurs avec la meilleure qualité ou réceptivité) et d'en dégager 3 ou 4 leçons stratégiques fondamentales.
+Chaque enseignement doit être formulé en français de manière extrêmement concise, précise et chiffrée (ex: "Préférer LinkedIn (taux de réponse de 27.8%) à l'Email (26.7%)").
+
+Données de performance actuelles du CRM FOLO :
+${JSON.stringify(metrics, null, 2)}
+
+Directives d'analyse :
+1. Analyse le canal d'approche le plus performant (LinkedIn, Email, SMS ou WhatsApp) d'après le taux de réponse des campagnes existantes.
+2. Identifie les secteurs d'activité (industries) les plus réceptifs ou qualitatifs (ceux avec le score d'intérêt moyen "averageScore" ou le volume financier le plus fort).
+3. Formule une recommandation budgétaire ou d'utilisation des ressources gratuites d'API.
+4. Suggère une amélioration concrète sur le suivi des prospects ou le copywriting d'approche.
+
+Renvoie obligatoirement un objet JSON strict de cette structure :
+{
+  "insights": [
+    "Analyse du canal : <Leçon apprise précise et chiffrée>",
+    "Focus Sectoriel : <Leçon apprise précise et chiffrée>",
+    "Optimisation Budgétaire : <Recommandation sur l'allocation des quotas>",
+    "Amélioration des Tâches : <Conseil pratique d'automatisation ou de relances>"
+  ]
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: "Effectue l'audit stratégique d'apprentissage continu des données FOLO CRM.",
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            insights: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+              description: "Une liste de 4 enseignements hautement qualifiés tirés des données."
+            }
+          },
+          required: ["insights"]
+        }
+      }
+    });
+
+    const parsed = JSON.parse(response.text.trim());
+    
+    if (!currentDb.orchestratorConfig) {
+      currentDb.orchestratorConfig = {
+        mode: "balanced",
+        dailyBudgetLimit: 15.00,
+        costPerLeadLimit: 1.50,
+        useOnlyFreeServices: true,
+        targetLeadsCount: 5,
+        currentDailySpend: 0,
+        remainingFreeQuota: 1500
+      };
+    }
+
+    currentDb.orchestratorConfig.learningInsights = parsed.insights;
+    currentDb.orchestratorConfig.lastLearningAt = new Date().toISOString();
+    saveDatabaseState(currentDb);
+
+    res.json({ status: "success", config: currentDb.orchestratorConfig });
+  } catch (error: any) {
+    console.error("AI Orchestrator Continuous Learning Error:", error);
+    res.status(500).json({ error: error.message || "Failed to trigger continuous learning audit" });
   }
 });
 

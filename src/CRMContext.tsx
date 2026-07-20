@@ -35,6 +35,7 @@ interface CRMContextType {
   updateOrchestratorConfig: (config: OrchestratorConfig) => Promise<void>;
   buildOrchestratorPlanAI: (params: { goalDescription: string; targetLeadsCount: number; maxBudget: number; useOnlyFree: boolean; mode: string }) => Promise<void>;
   executeOrchestratorStepAI: (planId: string, stepIndex: number) => Promise<void>;
+  triggerOrchestratorLearning: () => Promise<void>;
 }
 
 const CRMContext = createContext<CRMContextType | undefined>(undefined);
@@ -348,6 +349,17 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await refreshDb();
   };
 
+  const triggerOrchestratorLearning = async () => {
+    const res = await fetch("/api/ai/orchestrator/learn-and-adapt", {
+      method: "POST"
+    });
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "L'audit d'apprentissage de l'Orchestrateur a échoué.");
+    }
+    await refreshDb();
+  };
+
   return (
     <CRMContext.Provider
       value={{
@@ -378,7 +390,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         approveSuggestion,
         updateOrchestratorConfig,
         buildOrchestratorPlanAI,
-        executeOrchestratorStepAI
+        executeOrchestratorStepAI,
+        triggerOrchestratorLearning
       }}
     >
       {children}

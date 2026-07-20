@@ -32,6 +32,7 @@ export const OrchestratorView: React.FC = () => {
     updateOrchestratorConfig, 
     buildOrchestratorPlanAI, 
     executeOrchestratorStepAI,
+    triggerOrchestratorLearning,
     isLoading
   } = useCRM();
 
@@ -51,6 +52,7 @@ export const OrchestratorView: React.FC = () => {
   const [retryStrategy, setRetryStrategy] = useState(orchestratorConfig?.policies?.retryStrategy ?? "standard");
   const [approvedSources, setApprovedSources] = useState<string[]>(orchestratorConfig?.policies?.approvedSources ?? ["public_web", "tenders_bf", "linkedin"]);
   const [isSavingPolicies, setIsSavingPolicies] = useState(false);
+  const [isLearning, setIsLearning] = useState(false);
 
   if (!orchestratorConfig) {
     return (
@@ -496,6 +498,114 @@ export const OrchestratorView: React.FC = () => {
 
         {/* Right Column: Execution Policies center */}
         <div className="space-y-6">
+          
+          {/* Section 0: Continuous Strategic Learning Center */}
+          <div className="bg-gradient-to-b from-indigo-50/50 to-white rounded-xl border border-indigo-100 shadow-sm p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-indigo-600 animate-pulse" />
+                <span>Cerveau Stratégique d'Apprentissage</span>
+              </h2>
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsLearning(true);
+                  setFeedbackMessage(null);
+                  try {
+                    await triggerOrchestratorLearning();
+                    setFeedbackMessage({ 
+                      type: "success", 
+                      text: "Audit d'apprentissage continu terminé ! L'orchestrateur a analysé vos conversions et ajusté sa stratégie commerciale." 
+                    });
+                  } catch (err: any) {
+                    setFeedbackMessage({ type: "error", text: err.message || "L'audit d'apprentissage continu a échoué." });
+                  } finally {
+                    setIsLearning(false);
+                  }
+                }}
+                disabled={isLearning}
+                title="Lancer l'audit stratégique en temps réel"
+                className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition disabled:opacity-40"
+              >
+                {isLearning ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              L'Orchestrateur supérieur FOLO CRM AI analyse en continu l'historique des campagnes et la distribution de votre pipeline pour affiner ses futures suggestions d'approche commerciale.
+            </p>
+
+            {orchestratorConfig.learningInsights && orchestratorConfig.learningInsights.length > 0 ? (
+              <div className="space-y-2.5">
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center justify-between">
+                  <span>Enseignements stratégiques récents :</span>
+                  {orchestratorConfig.lastLearningAt && (
+                    <span className="text-[9px] font-medium text-indigo-500 lowercase">
+                      mis à jour {new Date(orchestratorConfig.lastLearningAt).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {orchestratorConfig.learningInsights.map((insight, idx) => {
+                    let emoji = "💡";
+                    if (insight.toLowerCase().includes("canal")) emoji = "📈";
+                    else if (insight.toLowerCase().includes("sectoriel") || insight.toLowerCase().includes("secteur")) emoji = "🏢";
+                    else if (insight.toLowerCase().includes("budgétaire") || insight.toLowerCase().includes("quota") || insight.toLowerCase().includes("coût")) emoji = "💰";
+                    else if (insight.toLowerCase().includes("tâches") || insight.toLowerCase().includes("relance")) emoji = "⏳";
+                    
+                    return (
+                      <div key={idx} className="flex gap-2.5 items-start p-2.5 bg-slate-50/50 border border-slate-100 rounded-lg text-xs">
+                        <span className="text-sm shrink-0">{emoji}</span>
+                        <p className="text-slate-600 leading-normal font-medium">{insight}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-4 text-center space-y-2">
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Aucun enseignement stratégique stocké pour le moment. L'Orchestrateur a besoin d'analyser l'historique du CRM.
+                </p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsLearning(true);
+                    setFeedbackMessage(null);
+                    try {
+                      await triggerOrchestratorLearning();
+                      setFeedbackMessage({ 
+                        type: "success", 
+                        text: "Audit d'apprentissage continu terminé ! L'orchestrateur a analysé vos conversions et ajusté sa stratégie commerciale." 
+                      });
+                    } catch (err: any) {
+                      setFeedbackMessage({ type: "error", text: err.message || "L'audit d'apprentissage continu a échoué." });
+                    } finally {
+                      setIsLearning(false);
+                    }
+                  }}
+                  disabled={isLearning}
+                  className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg transition"
+                >
+                  {isLearning ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-white" />
+                  ) : (
+                    <Sparkles className="w-3 h-3" />
+                  )}
+                  <span>Déclencher l'Audit d'Apprentissage</span>
+                </button>
+              </div>
+            )}
+            
+            <div className="pt-1.5 border-t border-slate-100 flex items-center gap-1.5 text-[9px] font-bold text-indigo-950 uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Boucle de feedback active</span>
+            </div>
+          </div>
           
           {/* Section 1: Policies Center */}
           <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 space-y-4">
