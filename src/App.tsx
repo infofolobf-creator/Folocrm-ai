@@ -20,9 +20,10 @@ import { ReportingView } from "./components/ReportingView";
 import { OpportunitiesView } from "./components/OpportunitiesView";
 import { OrchestratorView } from "./components/OrchestratorView";
 import { KnowledgeHubView } from "./components/KnowledgeHubView";
-import { LayoutDashboard, Users, Target, Volume2, CheckSquare, Brain, FileText, Menu, X, HelpCircle, Loader2, Compass, Cpu, BookOpen } from "lucide-react";
+import { BusinessDesignStudioView } from "./components/BusinessDesignStudioView";
+import { LayoutDashboard, Users, Target, Volume2, CheckSquare, Brain, FileText, Menu, X, HelpCircle, Loader2, Compass, Cpu, BookOpen, Sparkles } from "lucide-react";
 
-type CRMTab = "dashboard" | "leads" | "pipeline" | "campaigns" | "tasks" | "agents" | "reporting" | "opportunities" | "orchestrator" | "knowledge";
+type CRMTab = "dashboard" | "leads" | "pipeline" | "campaigns" | "tasks" | "agents" | "reporting" | "opportunities" | "orchestrator" | "knowledge" | "business-studio";
 
 function MainAppLayout() {
   const { isLoading, error } = useCRM();
@@ -52,6 +53,8 @@ function MainAppLayout() {
         return <OrchestratorView />;
       case "knowledge":
         return <KnowledgeHubView />;
+      case "business-studio":
+        return <BusinessDesignStudioView />;
       default:
         return <DashboardView />;
     }
@@ -61,6 +64,7 @@ function MainAppLayout() {
     { id: "dashboard", label: "Tableau de Bord", icon: LayoutDashboard },
     { id: "orchestrator", label: "Orchestrateur & Budgets", icon: Cpu },
     { id: "knowledge", label: "Cerveau FOLO (RAG)", icon: BookOpen },
+    { id: "business-studio", label: "Business Design Studio", icon: Sparkles },
     { id: "opportunities", label: "Opportunités détectées", icon: Compass },
     { id: "leads", label: "Prospects & Partenaires", icon: Users },
     { id: "pipeline", label: "Tunnel Commercial (Kanban)", icon: Target },

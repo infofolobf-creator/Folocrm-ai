@@ -430,6 +430,161 @@ if (!currentDb.knowledge) {
   saveDatabaseState(currentDb);
 }
 
+// Initialize FOLO Business Design Studio Offers list
+if (!currentDb.businessOffers || currentDb.businessOffers.length === 0) {
+  currentDb.businessOffers = [
+    {
+      id: "offer-mock-1",
+      title: "Sponsor Cohorte Énergie Solaire Féminine",
+      clientName: "Sahel Énergie & Solaire Solide",
+      demandDescription: "Sponsoriser une formation de 25 jeunes filles vulnérables aux techniques solaires off-grid pour favoriser l'insertion professionnelle au Sahel.",
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      demandAnalysis: {
+        needs: [
+          "Formation technique accélérée en solaire photovoltaïque off-grid",
+          "Insertion professionnelle d'au moins 85% de la promotion",
+          "Parité et inclusion de jeunes filles déplacées internes",
+          "Rapport RSE complet pour Sahel Énergie"
+        ],
+        implicitNeeds: [
+          "Renforcement de l'image de marque locale de Sahel Énergie",
+          "Accès exclusif et précoce au recrutement des meilleures apprenantes",
+          "Validation pédagogique certifiée par l'État"
+        ],
+        decisionCriteria: [
+          "Coût global par étudiant",
+          "Taux de réussite historique de l'organisme",
+          "Garantie d'insertion et suivi post-formation"
+        ],
+        keywords: ["Solaire Off-grid", "Inclusion Féminine", "RSE", "Sahel", "Employabilité"],
+        risks: [
+          "Abandon en cours de formation pour raisons économiques ou familiales",
+          " Difficultés d'approvisionnement en kits de démonstration de pointe",
+          "Débouchés locaux restreints dans les régions isolées"
+        ]
+      },
+      skillsAlignment: {
+        skillsCoverageScore: 92,
+        matchedSkills: [
+          "Solaire Off-grid résidentiel et pompage solaire",
+          "Dimensionnement et installation électrique standard",
+          "Accompagnement à l'insertion et réseaux de mentors"
+        ],
+        missingSkills: [
+          "Techniques avancées de raccordement réseau MT (Moyenne Tension)"
+        ],
+        suggestedPartners: [
+          "Sinuhe Énergie (Partenaire Technique)",
+          "Ministère de l'Emploi et de la Jeunesse (Certification)"
+        ]
+      },
+      innovationIdeas: {
+        differentiators: [
+          "Formule co-branding 'Promo Sahel Énergie'",
+          "Dotation d'un kit de démarrage (outillage solaire professionnel) pour chaque diplômée",
+          "Suivi d'insertion digitale via la plateforme FOLO CRM"
+        ],
+        approaches: [
+          "Pédagogie par projet réel : installation d'un mini-réseau scolaire gratuit",
+          "Mentorat croisé avec les ingénieurs seniors de Sahel Énergie"
+        ],
+        techRecommendations: [
+          "Outils de dimensionnement solaire open-source sur mobiles Android",
+          "Systèmes IoT de monitoring à distance pour les projets de fin d'études"
+        ],
+        complementaryServices: [
+          "Formations complémentaires en gestion de micro-entreprise solaire",
+          "Rapport d'Impact Social mesuré et certifié RSE"
+        ]
+      },
+      scenarios: {
+        essential: {
+          title: "Formule Bourse Individuelle Multipliée",
+          objectives: ["Financer les frais d'apprentissage de 10 jeunes filles d'un programme régulier."],
+          deliverables: ["10 diplômées certifiées", "Fiches d'évaluation individuelles", "Accès standard au vivier FOLO"],
+          methodology: "Insertion de 10 apprenantes dans une cohorte multi-partenaires existante. Suivi académique standard.",
+          planning: "4 Mois de formation académique + 2 mois de stage",
+          resources: ["1 Formateur principal", "Salle de classe partagée", "Kits de TP standards"],
+          estimatedBudget: 15000,
+          competitiveAdvantages: ["Coût d'entrée réduit", "Zéro frais d'organisation générale", "Simplicité opérationnelle"],
+          simulation: {
+            probabilityOfSuccess: 85,
+            fitScore: 78,
+            profitability: 45,
+            riskLevel: "low",
+            estimatedTimelineDays: 120,
+            budgetLimitConsumption: 3.2
+          }
+        },
+        standard: {
+          title: "Sponsor de Cohorte Dédiée (Standard)",
+          objectives: ["Financer et parrainer une cohorte entière de 25 jeunes femmes aux métiers du solaire."],
+          deliverables: ["25 diplômées certifiées", "Accès prioritaire exclusif aux CVs", "Rapport d'impact RSE annuel"],
+          methodology: "Création d'une cohorte dédiée 'Promo Sahel Énergie'. Adaptation mineure du programme à la charte du partenaire.",
+          planning: "4 Mois de formation intensive + 3 mois de stage garanti",
+          resources: ["2 Formateurs techniques", "Salle dédiée", "Kits de TP solaires", "Chargé de relations partenaires"],
+          estimatedBudget: 22500,
+          competitiveAdvantages: ["Excellente visibilité locale", "Droit de regard sur la sélection", "Taux d'insertion maximisé"],
+          simulation: {
+            probabilityOfSuccess: 92,
+            fitScore: 92,
+            profitability: 60,
+            riskLevel: "medium",
+            estimatedTimelineDays: 120,
+            budgetLimitConsumption: 5.5
+          }
+        },
+        premium: {
+          title: "Sponsor de Cohorte Premium & Équipement",
+          objectives: ["Former 25 jeunes femmes et les équiper individuellement d'un kit d'outillage complet à la sortie."],
+          deliverables: ["25 diplômées certifiées et équipées", "Rapport d'impact multimédia (vidéos, photos)", "Campagne RP partagée"],
+          methodology: "Cohorte dédiée avec module complémentaire d'entrepreneuriat solaire. Remise officielle des diplômes et kits par Sahel Énergie.",
+          planning: "5 Mois (incluant module micro-entreprise) + 3 mois de stage",
+          resources: ["3 Formateurs (Technique + Business)", "Atelier d'applications réelles", "Kits d'outillage individuels de sortie"],
+          estimatedBudget: 32000,
+          competitiveAdvantages: ["Impact social de long terme mesurable", "Autonomie immédiate des diplômées", "Résonance médiatique forte"],
+          simulation: {
+            probabilityOfSuccess: 95,
+            fitScore: 98,
+            profitability: 72,
+            riskLevel: "medium",
+            estimatedTimelineDays: 150,
+            budgetLimitConsumption: 8.2
+          }
+        },
+        innovative: {
+          title: "Studio d'Innovation Solaire & IoT Agricole",
+          objectives: ["Former 25 jeunes filles et co-développer un prototype d'irrigation solaire connectée (IoT) adapté au Sahel."],
+          deliverables: ["25 diplômées double-compétences (Solaire + IoT)", "3 Prototypes opérationnels d'irrigation connectée", "Rapport RSE d'innovation"],
+          methodology: "Cohorte d'élite. Pédagogie active de type Hackathon d'innovation en partenariat avec le secteur de l'agroécologie de FOLO.",
+          planning: "6 Mois de formation intensive hybride",
+          resources: ["2 Formateurs solaires", "1 Formateur IoT & Électronique", "Composants de prototypage", "Accompagnement Brevets"],
+          estimatedBudget: 45000,
+          competitiveAdvantages: ["Positionnement pionnier de Sahel Énergie", "Création de propriété intellectuelle locale", "Différenciation concurrentielle totale"],
+          simulation: {
+            probabilityOfSuccess: 78,
+            fitScore: 95,
+            profitability: 85,
+            riskLevel: "high",
+            estimatedTimelineDays: 180,
+            budgetLimitConsumption: 12.0
+          }
+        }
+      },
+      competitivePositioning: {
+        relevance: "L'offre standard répond parfaitement à l'appel d'offres de Sahel Énergie RSE avec un budget contenu et des garanties d'embauche de talents qualifiés.",
+        differentiators: "Contrairement aux organismes de formation classiques, FOLO propose un co-branding complet, un droit de regard sur le recrutement et la remise de kits professionnels de sortie.",
+        weaknesses: "L'offre exige une forte implication managériale des ingénieurs de Sahel Énergie pour le mentorat.",
+        improvements: "Intégrer le coût du mentorat dans le budget Premium ou standardiser l'offre Innovante avec un co-financement d'une fondation internationale."
+      },
+      selectedScenario: "standard",
+      status: "finalized"
+    }
+  ];
+  saveDatabaseState(currentDb);
+}
+
 // Ensure Orchestrator config and default plans exist
 if (!currentDb.orchestratorConfig) {
   currentDb.orchestratorConfig = {
@@ -1537,6 +1692,407 @@ JSON strict de retour :
     step.output = `Échec de l'exécution : ${error.message || "Erreur interne"}`;
     saveDatabaseState(currentDb);
     res.status(500).json({ error: error.message || "Failed to execute step" });
+  }
+});
+
+// --- FOLO BUSINESS DESIGN STUDIO ENDPOINTS ---
+
+// Fetch all business offers
+app.get("/api/business-offers", (req, res) => {
+  res.json(currentDb.businessOffers || []);
+});
+
+// Create/add a custom business offer manually
+app.post("/api/business-offers", (req, res) => {
+  const offer = req.body;
+  if (!offer.id) {
+    offer.id = "offer-" + Math.random().toString(36).substr(2, 9);
+  }
+  if (!offer.createdAt) {
+    offer.createdAt = new Date().toISOString();
+  }
+  offer.updatedAt = new Date().toISOString();
+
+  if (!currentDb.businessOffers) {
+    currentDb.businessOffers = [];
+  }
+  
+  currentDb.businessOffers.unshift(offer);
+  saveDatabaseState(currentDb);
+  res.json({ status: "success", offer });
+});
+
+// Update a business offer
+app.put("/api/business-offers/:id", (req, res) => {
+  const { id } = req.params;
+  const updatedOffer = req.body;
+  
+  if (!currentDb.businessOffers) {
+    currentDb.businessOffers = [];
+  }
+
+  const index = currentDb.businessOffers.findIndex((o: any) => o.id === id);
+  if (index !== -1) {
+    currentDb.businessOffers[index] = {
+      ...currentDb.businessOffers[index],
+      ...updatedOffer,
+      updatedAt: new Date().toISOString()
+    };
+    saveDatabaseState(currentDb);
+    res.json({ status: "success", offer: currentDb.businessOffers[index] });
+  } else {
+    res.status(404).json({ error: "Offre non trouvée" });
+  }
+});
+
+// Delete a business offer
+app.delete("/api/business-offers/:id", (req, res) => {
+  const { id } = req.params;
+  if (!currentDb.businessOffers) {
+    currentDb.businessOffers = [];
+  }
+
+  const index = currentDb.businessOffers.findIndex((o: any) => o.id === id);
+  if (index !== -1) {
+    currentDb.businessOffers.splice(index, 1);
+    saveDatabaseState(currentDb);
+    res.json({ status: "success", message: "Offre supprimée avec succès" });
+  } else {
+    res.status(404).json({ error: "Offre non trouvée" });
+  }
+});
+
+// AI multi-agent offering generator
+app.post("/api/ai/business-studio/generate", async (req, res) => {
+  const { clientName, demandDescription, title } = req.body;
+  if (!clientName || !demandDescription) {
+    return res.status(400).json({ error: "Le nom du client et la description de la demande sont requis." });
+  }
+
+  try {
+    const ai = getGeminiClient();
+    
+    // 1. Retrieve knowledge grounding from FOLO Brain
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      `programme de formation bourses RSE tarifs compétences cohorte Sinuhe ${clientName} ${demandDescription}`
+    );
+
+    const systemPrompt = `Tu es le "FOLO Business Design Studio" (anciennement l'Atelier de Conception d'Offres IA). Tu es un système d'agents multi-IA d'élite conçu pour concevoir des offres d'affaires, de formation, de partenariat, de propositions commerciales et d'impact adaptées au Sahel et aux compétences de l'organisation FOLO.
+Tu dois incarner 5 agents spécialisés dans ton analyse :
+1. Agent Analyse de la Demande : Analyse les besoins (explicites et implicites), les critères de décision clés, les mots-clés stratégiques et les risques.
+2. Agent Adéquation des Compétences : Calcule un taux de couverture (0-100) par rapport aux compétences FOLO, liste les compétences correspondantes, identifie celles manquantes et suggère des partenaires locaux ou institutionnels.
+3. Agent Innovation : Génère des facteurs de différenciation innovants, des méthodologies pédagogiques ou technologiques adaptées (solaire, IoT, mobile) et des services complémentaires pertinents.
+4. Agent Construction d'Offre : Rédige 4 variantes d'offres (essentielle, standard, premium, innovante). Chaque variante doit comporter des objectifs précis, des livrables concrets, une méthodologie, une estimation de durée (planning), des ressources clés requises, un budget réaliste (en Euros EUR, par rapport aux tarifs FOLO : bourse individuelle à 1 500 €, sponsoring cohorte à 12 500 €, etc.) et des avantages concurrentiels.
+5. Agent Positionnement Concurrentiel : Rédige une analyse concise de la pertinence de la proposition, ses facteurs de différenciation, ses points faibles ou risques internes et propose des améliorations.
+
+Connaissances récupérées du Cerveau FOLO (Grounding RAG) :
+- Indice d'intégration : ${kbResult.confidenceScore}%
+- Synthèse des fiches : ${kbResult.answer}
+- Documents clés consultés : ${kbResult.sourcesUsed.map((s: any) => s.title).join(", ")}
+
+Règles impératives de cohérence commerciale :
+- Le budget global de la formule "Sponsor de Cohorte" (25 bourses complètes) est de 12 500 € standard.
+- Le budget d'une "Bourse Individuelle" est de 1 500 € par étudiant.
+- Aligne tes 4 offres sur ces échelles. Les scénarios doivent être réalistes pour l'Afrique de l'Ouest.
+- Le budget d'un scénario Essential doit tourner autour du nombre de bourses minimum ou individuelles (ex : 3 000 € à 15 000 €). Le Standard doit correspondre au Sponsoring complet (ex: 12 500 € à 25 000 €). Le Premium peut inclure de l'équipement additionnel (ex: 20 000 € à 40 000 €). L'Innovant peut proposer des pilotes IoT/Solaire de pointe (ex: 30 000 € à 60 000 €).
+
+Génère un objet JSON strict répondant exactement à cette structure :
+{
+  "demandAnalysis": {
+    "needs": ["besoin 1", "besoin 2"],
+    "implicitNeeds": ["besoin implicite 1"],
+    "decisionCriteria": ["critère de choix principal"],
+    "keywords": ["mot-cle1", "mot-cle2"],
+    "risks": ["risque 1"]
+  },
+  "skillsAlignment": {
+    "skillsCoverageScore": 85,
+    "matchedSkills": ["compétence 1"],
+    "missingSkills": ["compétence manquante"],
+    "suggestedPartners": ["partenaire recommandé"]
+  },
+  "innovationIdeas": {
+    "differentiators": ["différenciateur 1"],
+    "approaches": ["approche 1"],
+    "techRecommendations": ["techno conseillée"],
+    "complementaryServices": ["service additionnel"]
+  },
+  "scenarios": {
+    "essential": {
+      "title": "<Titre de l'offre essentielle>",
+      "objectives": ["objectif 1"],
+      "deliverables": ["livrable 1"],
+      "methodology": "<méthodologie en français>",
+      "planning": "<planning en français, ex: 3 mois>",
+      "resources": ["ressource 1"],
+      "estimatedBudget": 15000,
+      "competitiveAdvantages": ["avantage concurrentiel 1"],
+      "simulation": {
+        "probabilityOfSuccess": 85,
+        "fitScore": 75,
+        "profitability": 50,
+        "riskLevel": "low",
+        "estimatedTimelineDays": 120,
+        "budgetLimitConsumption": 4.5
+      }
+    },
+    "standard": {
+      "title": "<Titre de l'offre standard>",
+      "objectives": ["objectif 1"],
+      "deliverables": ["livrable 1"],
+      "methodology": "<méthodologie standard>",
+      "planning": "<planning standard>",
+      "resources": ["ressource 1"],
+      "estimatedBudget": 25000,
+      "competitiveAdvantages": ["avantage 1"],
+      "simulation": {
+        "probabilityOfSuccess": 90,
+        "fitScore": 90,
+        "profitability": 65,
+        "riskLevel": "medium",
+        "estimatedTimelineDays": 120,
+        "budgetLimitConsumption": 6.0
+      }
+    },
+    "premium": {
+      "title": "<Titre de l'offre premium>",
+      "objectives": ["objectif 1"],
+      "deliverables": ["livrable 1"],
+      "methodology": "<méthodologie premium>",
+      "planning": "<planning premium>",
+      "resources": ["ressource 1"],
+      "estimatedBudget": 35000,
+      "competitiveAdvantages": ["avantage premium"],
+      "simulation": {
+        "probabilityOfSuccess": 95,
+        "fitScore": 95,
+        "profitability": 70,
+        "riskLevel": "medium",
+        "estimatedTimelineDays": 150,
+        "budgetLimitConsumption": 8.5
+      }
+    },
+    "innovative": {
+      "title": "<Titre de l'offre innovante>",
+      "objectives": ["objectif 1"],
+      "deliverables": ["livrable 1"],
+      "methodology": "<méthodologie innovante>",
+      "planning": "<planning innovant>",
+      "resources": ["ressource 1"],
+      "estimatedBudget": 45000,
+      "competitiveAdvantages": ["avantage innovant"],
+      "simulation": {
+        "probabilityOfSuccess": 80,
+        "fitScore": 95,
+        "profitability": 80,
+        "riskLevel": "high",
+        "estimatedTimelineDays": 180,
+        "budgetLimitConsumption": 11.5
+      }
+    }
+  },
+  "competitivePositioning": {
+    "relevance": "<analyse en français>",
+    "differentiators": "<facteurs clés en français>",
+    "weaknesses": "<faiblesses de notre posture>",
+    "improvements": "<axes d'amélioration proposés>"
+  }
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: `Génère l'étude de faisabilité et l'architecture des 4 offres adaptées pour le client "${clientName}" sur la base de son besoin : "${demandDescription}"`,
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            demandAnalysis: {
+              type: Type.OBJECT,
+              properties: {
+                needs: { type: Type.ARRAY, items: { type: Type.STRING } },
+                implicitNeeds: { type: Type.ARRAY, items: { type: Type.STRING } },
+                decisionCriteria: { type: Type.ARRAY, items: { type: Type.STRING } },
+                keywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+                risks: { type: Type.ARRAY, items: { type: Type.STRING } }
+              },
+              required: ["needs", "implicitNeeds", "decisionCriteria", "keywords", "risks"]
+            },
+            skillsAlignment: {
+              type: Type.OBJECT,
+              properties: {
+                skillsCoverageScore: { type: Type.INTEGER },
+                matchedSkills: { type: Type.ARRAY, items: { type: Type.STRING } },
+                missingSkills: { type: Type.ARRAY, items: { type: Type.STRING } },
+                suggestedPartners: { type: Type.ARRAY, items: { type: Type.STRING } }
+              },
+              required: ["skillsCoverageScore", "matchedSkills", "missingSkills", "suggestedPartners"]
+            },
+            innovationIdeas: {
+              type: Type.OBJECT,
+              properties: {
+                differentiators: { type: Type.ARRAY, items: { type: Type.STRING } },
+                approaches: { type: Type.ARRAY, items: { type: Type.STRING } },
+                techRecommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
+                complementaryServices: { type: Type.ARRAY, items: { type: Type.STRING } }
+              },
+              required: ["differentiators", "approaches", "techRecommendations", "complementaryServices"]
+            },
+            scenarios: {
+              type: Type.OBJECT,
+              properties: {
+                essential: {
+                  type: Type.OBJECT,
+                  properties: {
+                    title: { type: Type.STRING },
+                    objectives: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    deliverables: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    methodology: { type: Type.STRING },
+                    planning: { type: Type.STRING },
+                    resources: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    estimatedBudget: { type: Type.NUMBER },
+                    competitiveAdvantages: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    simulation: {
+                      type: Type.OBJECT,
+                      properties: {
+                        probabilityOfSuccess: { type: Type.INTEGER },
+                        fitScore: { type: Type.INTEGER },
+                        profitability: { type: Type.INTEGER },
+                        riskLevel: { type: Type.STRING, enum: ["low", "medium", "high"] },
+                        estimatedTimelineDays: { type: Type.INTEGER },
+                        budgetLimitConsumption: { type: Type.NUMBER }
+                      },
+                      required: ["probabilityOfSuccess", "fitScore", "profitability", "riskLevel", "estimatedTimelineDays", "budgetLimitConsumption"]
+                    }
+                  },
+                  required: ["title", "objectives", "deliverables", "methodology", "planning", "resources", "estimatedBudget", "competitiveAdvantages", "simulation"]
+                },
+                standard: {
+                  type: Type.OBJECT,
+                  properties: {
+                    title: { type: Type.STRING },
+                    objectives: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    deliverables: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    methodology: { type: Type.STRING },
+                    planning: { type: Type.STRING },
+                    resources: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    estimatedBudget: { type: Type.NUMBER },
+                    competitiveAdvantages: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    simulation: {
+                      type: Type.OBJECT,
+                      properties: {
+                        probabilityOfSuccess: { type: Type.INTEGER },
+                        fitScore: { type: Type.INTEGER },
+                        profitability: { type: Type.INTEGER },
+                        riskLevel: { type: Type.STRING, enum: ["low", "medium", "high"] },
+                        estimatedTimelineDays: { type: Type.INTEGER },
+                        budgetLimitConsumption: { type: Type.NUMBER }
+                      },
+                      required: ["probabilityOfSuccess", "fitScore", "profitability", "riskLevel", "estimatedTimelineDays", "budgetLimitConsumption"]
+                    }
+                  },
+                  required: ["title", "objectives", "deliverables", "methodology", "planning", "resources", "estimatedBudget", "competitiveAdvantages", "simulation"]
+                },
+                premium: {
+                  type: Type.OBJECT,
+                  properties: {
+                    title: { type: Type.STRING },
+                    objectives: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    deliverables: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    methodology: { type: Type.STRING },
+                    planning: { type: Type.STRING },
+                    resources: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    estimatedBudget: { type: Type.NUMBER },
+                    competitiveAdvantages: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    simulation: {
+                      type: Type.OBJECT,
+                      properties: {
+                        probabilityOfSuccess: { type: Type.INTEGER },
+                        fitScore: { type: Type.INTEGER },
+                        profitability: { type: Type.INTEGER },
+                        riskLevel: { type: Type.STRING, enum: ["low", "medium", "high"] },
+                        estimatedTimelineDays: { type: Type.INTEGER },
+                        budgetLimitConsumption: { type: Type.NUMBER }
+                      },
+                      required: ["probabilityOfSuccess", "fitScore", "profitability", "riskLevel", "estimatedTimelineDays", "budgetLimitConsumption"]
+                    }
+                  },
+                  required: ["title", "objectives", "deliverables", "methodology", "planning", "resources", "estimatedBudget", "competitiveAdvantages", "simulation"]
+                },
+                innovative: {
+                  type: Type.OBJECT,
+                  properties: {
+                    title: { type: Type.STRING },
+                    objectives: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    deliverables: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    methodology: { type: Type.STRING },
+                    planning: { type: Type.STRING },
+                    resources: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    estimatedBudget: { type: Type.NUMBER },
+                    competitiveAdvantages: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    simulation: {
+                      type: Type.OBJECT,
+                      properties: {
+                        probabilityOfSuccess: { type: Type.INTEGER },
+                        fitScore: { type: Type.INTEGER },
+                        profitability: { type: Type.INTEGER },
+                        riskLevel: { type: Type.STRING, enum: ["low", "medium", "high"] },
+                        estimatedTimelineDays: { type: Type.INTEGER },
+                        budgetLimitConsumption: { type: Type.NUMBER }
+                      },
+                      required: ["probabilityOfSuccess", "fitScore", "profitability", "riskLevel", "estimatedTimelineDays", "budgetLimitConsumption"]
+                    }
+                  },
+                  required: ["title", "objectives", "deliverables", "methodology", "planning", "resources", "estimatedBudget", "competitiveAdvantages", "simulation"]
+                }
+              },
+              required: ["essential", "standard", "premium", "innovative"]
+            },
+            competitivePositioning: {
+              type: Type.OBJECT,
+              properties: {
+                relevance: { type: Type.STRING },
+                differentiators: { type: Type.STRING },
+                weaknesses: { type: Type.STRING },
+                improvements: { type: Type.STRING }
+              },
+              required: ["relevance", "differentiators", "weaknesses", "improvements"]
+            }
+          },
+          required: ["demandAnalysis", "skillsAlignment", "innovationIdeas", "scenarios", "competitivePositioning"]
+        }
+      }
+    });
+
+    const data = JSON.parse(response.text.trim());
+    
+    const newOffer = {
+      id: "offer-" + Math.random().toString(36).substr(2, 9),
+      title: title || `Proposition : ${clientName}`,
+      clientName,
+      demandDescription,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      demandAnalysis: data.demandAnalysis,
+      skillsAlignment: data.skillsAlignment,
+      innovationIdeas: data.innovationIdeas,
+      scenarios: data.scenarios,
+      competitivePositioning: data.competitivePositioning,
+      selectedScenario: null,
+      status: "draft"
+    };
+
+    if (!currentDb.businessOffers) {
+      currentDb.businessOffers = [];
+    }
+    currentDb.businessOffers.unshift(newOffer);
+    saveDatabaseState(currentDb);
+
+    res.json({ status: "success", offer: newOffer });
+  } catch (error: any) {
+    console.error("FOLO Business Design Studio Generator Error:", error);
+    res.status(500).json({ error: error.message || "Échec de la conception d'offres par l'IA." });
   }
 });
 

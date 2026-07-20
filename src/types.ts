@@ -205,4 +205,66 @@ export interface RagQueryResult {
   sourcesUsed: { id: string; title: string; category: string; subcategory: string }[];
 }
 
+export interface ScenarioDetail {
+  title: string;
+  objectives: string[];
+  deliverables: string[];
+  methodology: string;
+  planning: string;
+  resources: string[];
+  estimatedBudget: number;
+  competitiveAdvantages: string[];
+  simulation: {
+    probabilityOfSuccess: number; // 0-100
+    fitScore: number; // 0-100
+    profitability: number; // 0-100
+    riskLevel: "low" | "medium" | "high";
+    estimatedTimelineDays: number;
+    budgetLimitConsumption: number;
+  };
+}
+
+export interface BusinessOfferProposal {
+  id: string;
+  title: string;
+  clientName: string;
+  demandDescription: string;
+  createdAt: string;
+  updatedAt: string;
+  demandAnalysis: {
+    needs: string[];
+    implicitNeeds: string[];
+    decisionCriteria: string[];
+    keywords: string[];
+    risks: string[];
+  };
+  skillsAlignment: {
+    skillsCoverageScore: number;
+    matchedSkills: string[];
+    missingSkills: string[];
+    suggestedPartners: string[];
+  };
+  innovationIdeas: {
+    differentiators: string[];
+    approaches: string[];
+    techRecommendations: string[];
+    complementaryServices: string[];
+  };
+  scenarios: {
+    essential: ScenarioDetail;
+    standard: ScenarioDetail;
+    premium: ScenarioDetail;
+    innovative: ScenarioDetail;
+  };
+  competitivePositioning: {
+    relevance: string;
+    differentiators: string;
+    weaknesses: string;
+    improvements: string;
+  };
+  selectedScenario: "essential" | "standard" | "premium" | "innovative" | null;
+  status: "draft" | "under_review" | "finalized" | "sent";
+}
+
+
 

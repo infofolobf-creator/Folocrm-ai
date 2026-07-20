@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Lead, Company, Task, Campaign, LandingPage, VeilleAlert, MessageSuggestion, LeadStatus, OrchestratorConfig, OrchestratorPlan, KnowledgeItem, RagQueryResult } from "./types";
+import { Lead, Company, Task, Campaign, LandingPage, VeilleAlert, MessageSuggestion, LeadStatus, OrchestratorConfig, OrchestratorPlan, KnowledgeItem, RagQueryResult, BusinessOfferProposal } from "./types";
 
 interface CRMContextType {
   leads: Lead[];
@@ -17,6 +17,7 @@ interface CRMContextType {
   orchestratorConfig: OrchestratorConfig | null;
   orchestratorPlans: OrchestratorPlan[];
   knowledge: KnowledgeItem[];
+  businessOffers: BusinessOfferProposal[];
   isLoading: boolean;
   error: string | null;
   refreshDb: () => Promise<void>;
@@ -41,6 +42,9 @@ interface CRMContextType {
   updateKnowledgeItem: (id: string, item: Omit<KnowledgeItem, "id" | "updatedAt" | "version" | "versions">) => Promise<void>;
   deleteKnowledgeItem: (id: string) => Promise<void>;
   queryKnowledgeBase: (query: string, category?: string) => Promise<RagQueryResult>;
+  createBusinessOfferAI: (clientName: string, demandDescription: string, title?: string) => Promise<BusinessOfferProposal>;
+  updateBusinessOffer: (offer: BusinessOfferProposal) => Promise<void>;
+  deleteBusinessOffer: (id: string) => Promise<void>;
 }
 
 const CRMContext = createContext<CRMContextType | undefined>(undefined);
@@ -385,6 +389,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [orchestratorConfig, setOrchestratorConfig] = useState<OrchestratorConfig | null>(null);
   const [orchestratorPlans, setOrchestratorPlans] = useState<OrchestratorPlan[]>([]);
   const [knowledge, setKnowledge] = useState<KnowledgeItem[]>([]);
+  const [businessOffers, setBusinessOffers] = useState<BusinessOfferProposal[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -405,6 +410,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const parsedOrchestratorConfig = data.orchestratorConfig || DEFAULT_OFFLINE_DB.orchestratorConfig;
       const parsedOrchestratorPlans = data.orchestratorPlans || DEFAULT_OFFLINE_DB.orchestratorPlans;
       const parsedKnowledge = data.knowledge || [];
+      const parsedBusinessOffers = data.businessOffers || [];
 
       setLeads(parsedLeads);
       setCompanies(parsedCompanies);
@@ -416,6 +422,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setOrchestratorConfig(parsedOrchestratorConfig);
       setOrchestratorPlans(parsedOrchestratorPlans);
       setKnowledge(parsedKnowledge);
+      setBusinessOffers(parsedBusinessOffers);
 
       // Cache healthy response to localStorage
       try {
@@ -429,7 +436,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           suggestions: parsedSuggestions,
           orchestratorConfig: parsedOrchestratorConfig,
           orchestratorPlans: parsedOrchestratorPlans,
-          knowledge: parsedKnowledge
+          knowledge: parsedKnowledge,
+          businessOffers: parsedBusinessOffers
         }));
       } catch (e) {
         console.error("Failed to cache database state:", e);
@@ -452,6 +460,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setOrchestratorConfig(cached.orchestratorConfig || DEFAULT_OFFLINE_DB.orchestratorConfig);
           setOrchestratorPlans(cached.orchestratorPlans || DEFAULT_OFFLINE_DB.orchestratorPlans);
           setKnowledge(cached.knowledge || []);
+          setBusinessOffers(cached.businessOffers || []);
         } else {
           // No cache found, initialize with beautiful fallback data
           setLeads(DEFAULT_OFFLINE_DB.leads);
@@ -464,10 +473,12 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setOrchestratorConfig(DEFAULT_OFFLINE_DB.orchestratorConfig);
           setOrchestratorPlans(DEFAULT_OFFLINE_DB.orchestratorPlans);
           setKnowledge([]);
+          setBusinessOffers([]);
           
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
             ...DEFAULT_OFFLINE_DB,
-            knowledge: []
+            knowledge: [],
+            businessOffers: []
           }));
         }
         setError(null);
@@ -1146,6 +1157,62 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const createBusinessOfferAI = async (clientName: string, demandDescription: string, title?: string): Promise<BusinessOfferProposal> => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/ai/business-studio/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientName, demandDescription, title })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Échec de génération d'offre.");
+      }
+      const data = await res.json();
+      await refreshDb();
+      return data.offer;
+    } catch (err: any) {
+      console.error("Failed to generate AI business proposal:", err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateBusinessOffer = async (offer: BusinessOfferProposal): Promise<void> => {
+    try {
+      const res = await fetch(`/api/business-offers/${offer.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(offer)
+      });
+      if (!res.ok) {
+        throw new Error("Impossible d'enregistrer les modifications de l'offre.");
+      }
+      await refreshDb();
+    } catch (err) {
+      console.error("Failed to update business proposal:", err);
+      const updated = businessOffers.map(o => o.id === offer.id ? offer : o);
+      setBusinessOffers(updated);
+    }
+  };
+
+  const deleteBusinessOffer = async (id: string): Promise<void> => {
+    try {
+      const res = await fetch(`/api/business-offers/${id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        throw new Error("Impossible de supprimer l'offre.");
+      }
+      await refreshDb();
+    } catch (err) {
+      console.error("Failed to delete business proposal:", err);
+      setBusinessOffers(businessOffers.filter(o => o.id !== id));
+    }
+  };
+
   return (
     <CRMContext.Provider
       value={{
@@ -1159,6 +1226,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         orchestratorConfig,
         orchestratorPlans,
         knowledge,
+        businessOffers,
         isLoading,
         error,
         refreshDb,
@@ -1182,7 +1250,10 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addKnowledgeItem,
         updateKnowledgeItem,
         deleteKnowledgeItem,
-        queryKnowledgeBase
+        queryKnowledgeBase,
+        createBusinessOfferAI,
+        updateBusinessOffer,
+        deleteBusinessOffer
       }}
     >
       {children}
