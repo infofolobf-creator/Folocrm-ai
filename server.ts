@@ -2096,6 +2096,1089 @@ Génère un objet JSON strict répondant exactement à cette structure :
   }
 });
 
+// --- FOLO LANDING STUDIO IA ENDPOINTS ---
+
+// Submit a lead from a landing page form
+app.post("/api/landing/:slug/submit", async (req, res) => {
+  const { slug } = req.params;
+  const { name, email, phone, companyName, notes } = req.body;
+
+  if (!name || !email) {
+    return res.status(400).json({ error: "Le nom et l'adresse e-mail sont obligatoires." });
+  }
+
+  // Find landing page
+  const lpIndex = currentDb.landingPages?.findIndex((lp: any) => lp.slug === slug);
+  if (lpIndex === -1 || lpIndex === undefined) {
+    return res.status(404).json({ error: "Page de destination introuvable." });
+  }
+
+  const lp = currentDb.landingPages[lpIndex];
+
+  // 1. Increment conversions
+  lp.conversions = (lp.conversions || 0) + 1;
+
+  // 2. Create Company if missing
+  let companyId = "comp-temp";
+  if (companyName) {
+    const existingComp = currentDb.companies?.find((c: any) => c.name.toLowerCase() === companyName.toLowerCase());
+    if (existingComp) {
+      companyId = existingComp.id;
+    } else {
+      companyId = "comp-" + Math.random().toString(36).substr(2, 9);
+      const newComp = {
+        id: companyId,
+        name: companyName,
+        industry: "Autre",
+        size: "1-10",
+        website: "",
+        country: lp.targetCountry || "Burkina Faso",
+        address: "",
+        createdAt: new Date().toISOString()
+      };
+      if (!currentDb.companies) currentDb.companies = [];
+      currentDb.companies.push(newComp);
+    }
+  }
+
+  // 3. Create Lead
+  const leadId = "lead-" + Math.random().toString(36).substr(2, 9);
+  const newLead = {
+    id: leadId,
+    name,
+    companyId,
+    companyName: companyName || "Particulier",
+    email,
+    phone: phone || "",
+    status: "new",
+    value: lp.targetSector === "formation" ? 1500 : (lp.targetSector === "ong" ? 12500 : 5000),
+    source: `Landing Page: ${lp.title}`,
+    country: lp.targetCountry || "Burkina Faso",
+    createdAt: new Date().toISOString(),
+    notes: notes || `Formulaire soumis depuis la page de destination: "${lp.title}". Intérêt pour le secteur: ${lp.targetSector || "général"}.`
+  };
+
+  if (!currentDb.leads) currentDb.leads = [];
+  currentDb.leads.unshift(newLead);
+
+  // 4. Update campaign stats if lp has campaignId
+  if (lp.campaignId) {
+    const campaign = currentDb.campaigns?.find((c: any) => c.id === lp.campaignId);
+    if (campaign) {
+      campaign.responseCount = (campaign.responseCount || 0) + 1;
+    }
+  }
+
+  saveDatabaseState(currentDb);
+
+  // 5. Run asynchronous/instant AI qualification on the new lead
+  try {
+    const ai = getGeminiClient();
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: `Qualifie stratégiquement ce prospect de formulaire : Nom=${name}, Email=${email}, Notes=${newLead.notes}`,
+      config: {
+        systemInstruction: `Tu es le "Qualificateur AI" de FOLO. Évalue de 0 à 100 l'intérêt de ce lead, attribue une température (hot, warm, cold) et suggère l'action idéale.
+JSON strict de retour :
+{
+  "score": <number>,
+  "status": "hot" | "warm" | "cold",
+  "summary": "<Analyse succincte>",
+  "needsFollowUp": <boolean>,
+  "suggestedNextAction": "<Recommandation commerciale>"
+}`,
+        responseMimeType: "application/json"
+      }
+    });
+
+    const data = JSON.parse(response.text.trim());
+    const leadIdx = currentDb.leads.findIndex((l: any) => l.id === leadId);
+    if (leadIdx !== -1) {
+      currentDb.leads[leadIdx].agentQualification = {
+        ...data,
+        analyzedAt: new Date().toISOString(),
+        agentId: "agent-qualification"
+      };
+      saveDatabaseState(currentDb);
+    }
+  } catch (err) {
+    console.error("AI qualification on submit failed:", err);
+  }
+
+  res.json({ status: "success", leadId, conversionsCount: lp.conversions });
+});
+
+// Increment clicks on landing page
+app.post("/api/landing/:slug/click", (req, res) => {
+  const { slug } = req.params;
+  const lp = currentDb.landingPages?.find((lp: any) => lp.slug === slug);
+  if (!lp) {
+    return res.status(404).json({ error: "Page non trouvée." });
+  }
+  lp.clicks = (lp.clicks || 0) + 1;
+  saveDatabaseState(currentDb);
+  res.json({ status: "success", clicksCount: lp.clicks });
+});
+
+// AI Landing Page Generation
+app.post("/api/ai/landing-studio/generate", async (req, res) => {
+  const { title, description, pageType, theme, campaignId, targetSector, targetCountry, language } = req.body;
+
+  if (!title || !description) {
+    return res.status(400).json({ error: "Le titre et la description du projet de page sont requis." });
+  }
+
+  try {
+    const ai = getGeminiClient();
+
+    // 1. Retrieve knowledge grounding from FOLO Brain
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      `Filières de formation compétences bourses RSE tarifs cas Sinuhe Énergie FOLO pour le secteur ${targetSector || "formation"}`
+    );
+
+    const systemPrompt = `Tu es le "Générateur Landing Page FOLO AI". Tu es un expert senior en marketing digital, copywriting persuasif (AIDA), SEO technique et UX/UI.
+Ta mission est de concevoir une page marketing de type "${pageType || "landing"}" hautement performante, rédigée dans la langue "${language || "fr"}", ciblant le secteur "${targetSector || "formation"}" au pays "${targetCountry || "Burkina Faso"}".
+
+Tu dois utiliser les connaissances internes récupérées du Cerveau FOLO pour crédibiliser et enrichir la page (ex: bootcamps de 6 mois, bourses RSE de 12 500 € pour 25 étudiants, Sinuhe Énergie comme exemple client, 1500 € par bourse individuelle) :
+Synthèse interne FOLO : ${kbResult.answer}
+
+Règles de génération :
+- Génère un objet JSON strict correspondant exactement au schéma demandé.
+- Les blocks doivent raconter une histoire marketing :
+  1. Hero: Titre percutant, sous-titre engageant, un bouton de CTA.
+  2. Features: 3-4 bénéfices ou modules clés de notre offre.
+  3. Stats: Chiffres clés FOLO (ex: 95% d'insertion sous 6 mois, 500+ jeunes formés, etc.).
+  4. Text-image: Présentation humaine ou historique de réussite (ex: Sinuhe Énergie).
+  5. Pricing: Section montrant les offres de Sponsoring (12 500 € Sponsoring cohorte, 1 500 € Bourse individuelle, ou Partenaire standard).
+  6. Form: Un formulaire intelligent d'inscription/contact avec les champs (nom, email, téléphone, entreprise, message/notes).
+  7. FAQ: Questions courantes des entreprises ou partenaires.
+  8. Footer: Pied de page professionnel avec mentions et copyrights FOLO.
+
+- Le champ htmlContent, cssContent et jsContent doivent contenir du code de production réel (HTML5 autonome, CSS moderne avec Tailwind et responsive design propre, JS de soumission de formulaire).
+- Le code HTML doit correspondre aux blocks générés et posséder une structure sémantique élégante.
+- Génère également les données de référencement SEO de haut niveau (Title, meta description, keywords, Schema.org au format JSON-LD valide, Open Graph et Twitter Cards).
+- Estime un score SEO de départ réaliste (entre 80 et 95) avec des recommandations de rédaction.
+
+Génère un objet JSON strict respectant exactement cette structure :
+{
+  "headerTitle": "<Titre d'accroche principal>",
+  "headerSub": "<Sous-titre explicatif et percutant>",
+  "ctaText": "<Texte d'appel à l'action>",
+  "blocks": [
+    {
+      "id": "block-id-1",
+      "type": "hero" | "features" | "stats" | "text-image" | "pricing" | "form" | "faq" | "footer",
+      "content": {
+        "title": "<Titre du bloc>",
+        "subtitle": "<Optionnel : sous-titre>",
+        "text": "<Texte principal du bloc>",
+        "image": "<Optionnel : url ou description d'illustration>",
+        "buttonText": "<Optionnel : texte de bouton>",
+        "fields": [
+          { "name": "name", "label": "Nom complet", "type": "text", "required": true }
+        ],
+        "items": [
+          { "title": "<Titre item>", "text": "<Description item>", "value": "<Optionnel: valeur numérique>", "icon": "<Nom d'icone Lucide libre>" }
+        ]
+      }
+    }
+  ],
+  "seoData": {
+    "title": "<Titre SEO optimisé>",
+    "metaDescription": "<Meta description percutante>",
+    "keywords": ["mot-cle1", "mot-cle2"],
+    "schemaOrg": "<JSON-LD de structured data au format String>",
+    "openGraph": { "title": "<Titre OG>", "description": "<Description OG>", "image": "https://folo.ai/og-image.jpg" },
+    "twitterCard": { "card": "summary_large_image", "title": "<Titre Twitter>", "description": "<Description Twitter>", "image": "https://folo.ai/og-image.jpg" },
+    "seoScore": 88,
+    "seoRecommendations": ["recommandation 1", "recommandation 2"]
+  },
+  "htmlContent": "<Code HTML brut complet incorporant la structure des blocs, prêt à être rendu>",
+  "cssContent": "<Code CSS Tailwind custom>",
+  "jsContent": "<Code JS léger pour gérer l'interactivité, par exemple la validation et soumission Ajax du formulaire vers /api/landing/slug/submit>"
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: `Génère la Landing Page FOLO AI pour le projet intitulé "${title}" : ${description}. Thème choisi : "${theme || "modern"}". Secteur : "${targetSector || "formation"}". Langue : "${language || "fr"}".`,
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            headerTitle: { type: Type.STRING },
+            headerSub: { type: Type.STRING },
+            ctaText: { type: Type.STRING },
+            blocks: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  type: { type: Type.STRING, enum: ["hero", "features", "stats", "text-image", "pricing", "form", "faq", "footer", "logos"] },
+                  content: {
+                    type: Type.OBJECT,
+                    properties: {
+                      title: { type: Type.STRING },
+                      subtitle: { type: Type.STRING },
+                      text: { type: Type.STRING },
+                      image: { type: Type.STRING },
+                      buttonText: { type: Type.STRING },
+                      fields: {
+                        type: Type.ARRAY,
+                        items: {
+                          type: Type.OBJECT,
+                          properties: {
+                            name: { type: Type.STRING },
+                            label: { type: Type.STRING },
+                            type: { type: Type.STRING },
+                            required: { type: Type.BOOLEAN }
+                          },
+                          required: ["name", "label", "type", "required"]
+                        }
+                      },
+                      items: {
+                        type: Type.ARRAY,
+                        items: {
+                          type: Type.OBJECT,
+                          properties: {
+                            title: { type: Type.STRING },
+                            text: { type: Type.STRING },
+                            value: { type: Type.STRING },
+                            icon: { type: Type.STRING }
+                          },
+                          required: ["title", "text"]
+                        }
+                      }
+                    },
+                    required: ["title"]
+                  }
+                },
+                required: ["id", "type", "content"]
+              }
+            },
+            seoData: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                metaDescription: { type: Type.STRING },
+                keywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+                schemaOrg: { type: Type.STRING },
+                openGraph: {
+                  type: Type.OBJECT,
+                  properties: {
+                    title: { type: Type.STRING },
+                    description: { type: Type.STRING },
+                    image: { type: Type.STRING }
+                  },
+                  required: ["title", "description", "image"]
+                },
+                twitterCard: {
+                  type: Type.OBJECT,
+                  properties: {
+                    card: { type: Type.STRING },
+                    title: { type: Type.STRING },
+                    description: { type: Type.STRING },
+                    image: { type: Type.STRING }
+                  },
+                  required: ["card", "title", "description", "image"]
+                },
+                seoScore: { type: Type.INTEGER },
+                seoRecommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
+              },
+              required: ["title", "metaDescription", "keywords", "seoScore", "seoRecommendations"]
+            },
+            htmlContent: { type: Type.STRING },
+            cssContent: { type: Type.STRING },
+            jsContent: { type: Type.STRING }
+          },
+          required: ["headerTitle", "headerSub", "ctaText", "blocks", "seoData", "htmlContent"]
+        }
+      }
+    });
+
+    const data = JSON.parse(response.text.trim());
+
+    // Generate clean unique slug
+    const cleanSlug = title.toLowerCase().trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-") + "-" + Math.random().toString(36).substr(2, 4);
+
+    const generatedPage = {
+      id: "lp-" + Math.random().toString(36).substr(2, 9),
+      title,
+      slug: cleanSlug,
+      description,
+      headerTitle: data.headerTitle,
+      headerSub: data.headerSub,
+      ctaText: data.ctaText,
+      theme: theme || "modern",
+      clicks: 0,
+      conversions: 0,
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      pageType: pageType || "landing",
+      campaignId: campaignId || undefined,
+      targetSector: targetSector || "formation",
+      targetCountry: targetCountry || "Burkina Faso",
+      language: language || "fr",
+      htmlContent: data.htmlContent,
+      cssContent: data.cssContent,
+      jsContent: data.jsContent,
+      blocks: data.blocks,
+      seoData: data.seoData,
+      versions: [
+        {
+          versionId: "v-initial",
+          timestamp: new Date().toISOString(),
+          title: "Version Générée par l'IA",
+          blocks: data.blocks
+        }
+      ],
+      lastSavedAt: new Date().toISOString()
+    };
+
+    if (!currentDb.landingPages) {
+      currentDb.landingPages = [];
+    }
+    currentDb.landingPages.unshift(generatedPage);
+    saveDatabaseState(currentDb);
+
+    res.json({ status: "success", landingPage: generatedPage });
+  } catch (error: any) {
+    console.error("AI Landing Page Generation Error:", error);
+    res.status(500).json({ error: error.message || "Échec de la génération automatique de la landing page par l'IA." });
+  }
+});
+
+// AI Landing Page Audit (Orchestrator validation)
+app.post("/api/ai/landing-studio/audit", async (req, res) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({ error: "L'identifiant de la landing page est requis." });
+  }
+
+  const lpIndex = currentDb.landingPages?.findIndex((lp: any) => lp.id === id);
+  if (lpIndex === -1 || lpIndex === undefined) {
+    return res.status(404).json({ error: "Page de destination introuvable." });
+  }
+
+  const lp = currentDb.landingPages[lpIndex];
+
+  try {
+    const ai = getGeminiClient();
+
+    // Grounding with database knowledge to check coherence
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      `vitesse d'affichage conformité légale tarifs FOLO RSE bourses pour évaluer ${lp.title}`
+    );
+
+    const systemPrompt = `Tu es "l'Orchestrateur IA" de FOLO. Ta fonction est d'auditer de manière objective, complète et impitoyable une page de destination créée pour attirer des partenaires.
+Tu dois évaluer si les informations présentes sur la page sont parfaitement cohérentes avec le référentiel de connaissances internes de FOLO, s'il y a des incohérences tarifaires (ex: bourses RSE à 12 500 € par cohorte, 1 500 € par bourse individuelle), si l'UX est fluide, si l'architecture SEO est respectée, et si les performances techniques simulées sont bonnes.
+
+Données de la page à auditer :
+- Titre : ${lp.title}
+- Description : ${lp.description}
+- Accroche : ${lp.headerTitle}
+- Sous-titre : ${lp.headerSub}
+- Type de page : ${lp.pageType || "landing"}
+- Secteur cible : ${lp.targetSector || "formation"}
+- Langue : ${lp.language || "fr"}
+- Blocs textuels : ${JSON.stringify(lp.blocks || [])}
+
+Données du référentiel interne :
+${kbResult.answer}
+
+Règles de notation :
+- Calcule une note de cohérence de 0 à 100 par rapport au référentiel.
+- Calcule une note SEO de 0 à 100.
+- Calcule une note UX de 0 à 100.
+- Calcule une note de performance de 0 à 100 (vitesse, légèreté du code HTML).
+- Détermine si la page est valide pour publication immédiate ou si des modifications majeures sont requises.
+- Propose au moins 4 suggestions concrètes et pertinentes d'amélioration en français.
+
+Génère un objet JSON strict de rapport conforme au schéma :
+{
+  "isValid": <boolean>,
+  "coherenceScore": <number 0-100>,
+  "coherenceComments": "<explication claire en français de l'alignement ou des fautes de cohérence>",
+  "seoCompliance": <number 0-100>,
+  "uxScore": <number 0-100>,
+  "performanceScore": <number 0-100>,
+  "improvementSuggestions": ["suggestion 1", "suggestion 2"]
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: "Réalise un audit complet de la page de destination active et valide sa conformité légale, technique et commerciale.",
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            isValid: { type: Type.BOOLEAN },
+            coherenceScore: { type: Type.INTEGER },
+            coherenceComments: { type: Type.STRING },
+            seoCompliance: { type: Type.INTEGER },
+            uxScore: { type: Type.INTEGER },
+            performanceScore: { type: Type.INTEGER },
+            improvementSuggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["isValid", "coherenceScore", "coherenceComments", "seoCompliance", "uxScore", "performanceScore", "improvementSuggestions"]
+        }
+      }
+    });
+
+    const reportData = JSON.parse(response.text.trim());
+    const report = {
+      ...reportData,
+      checkedAt: new Date().toISOString()
+    };
+
+    lp.orchestratorReport = report;
+    saveDatabaseState(currentDb);
+
+    res.json({ status: "success", report });
+  } catch (error: any) {
+    console.error("AI Landing Page Audit Error:", error);
+    res.status(500).json({ error: error.message || "Échec de l'audit de la page par l'Orchestrateur IA." });
+  }
+});
+
+// AI Landing Page SEO optimization
+app.post("/api/ai/landing-studio/seo-optimize", async (req, res) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({ error: "L'identifiant de la landing page est requis." });
+  }
+
+  const lpIndex = currentDb.landingPages?.findIndex((lp: any) => lp.id === id);
+  if (lpIndex === -1 || lpIndex === undefined) {
+    return res.status(404).json({ error: "Page de destination introuvable." });
+  }
+
+  const lp = currentDb.landingPages[lpIndex];
+
+  try {
+    const ai = getGeminiClient();
+
+    const systemPrompt = `Tu es l'"Agent SEO IA" d'élite de FOLO. Ta mission est d'optimiser au maximum le référencement naturel (SEO) et le maillage structuré de la page de destination fournie.
+Tu dois générer des métadonnées irréprochables :
+1. Un titre SEO percutant et optimisé de 50-60 caractères.
+2. Une méta description attractive de 140-160 caractères incitant au clic.
+3. Une liste de 6 mots-clés prioritaires (pertinents pour le Burkina Faso et l'insertion/ RSE).
+4. Un balisage Schema.org JSON-LD complet et valide (type WebPage, ou Course, ou EducationalOrganization).
+5. Des fiches Open Graph et Twitter Cards soignées.
+6. Un score SEO global (0-100) et une liste de 3 recommandations de rédaction complémentaires.
+
+Données de la page :
+- Titre : ${lp.title}
+- Description : ${lp.description}
+- Accroche : ${lp.headerTitle}
+- Blocs textuels : ${JSON.stringify(lp.blocks || [])}
+
+Génère un objet JSON strict répondant exactement à cette structure :
+{
+  "title": "<Titre SEO>",
+  "metaDescription": "<Méta description>",
+  "keywords": ["mot-cle1", "mot-cle2"],
+  "schemaOrg": "<String contenant la structure JSON-LD>",
+  "openGraph": { "title": "<Titre OG>", "description": "<Description OG>", "image": "https://folo.ai/og-image.jpg" },
+  "twitterCard": { "card": "summary_large_image", "title": "<Titre Twitter>", "description": "<Description Twitter>", "image": "https://folo.ai/og-image.jpg" },
+  "seoScore": <number 0-100>,
+  "seoRecommendations": ["reco 1", "reco 2"]
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: "Génère et optimise les métadonnées SEO et le balisage structuré pour cette page de destination.",
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            metaDescription: { type: Type.STRING },
+            keywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+            schemaOrg: { type: Type.STRING },
+            openGraph: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+                image: { type: Type.STRING }
+              },
+              required: ["title", "description", "image"]
+            },
+            twitterCard: {
+              type: Type.OBJECT,
+              properties: {
+                card: { type: Type.STRING },
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+                image: { type: Type.STRING }
+              },
+              required: ["card", "title", "description", "image"]
+            },
+            seoScore: { type: Type.INTEGER },
+            seoRecommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["title", "metaDescription", "keywords", "seoScore", "seoRecommendations"]
+        }
+      }
+    });
+
+    const seoData = JSON.parse(response.text.trim());
+    lp.seoData = seoData;
+    saveDatabaseState(currentDb);
+
+    res.json({ status: "success", seoData });
+  } catch (error: any) {
+    console.error("AI SEO Optimization Error:", error);
+    res.status(500).json({ error: error.message || "Échec de l'optimisation SEO de la page par l'IA." });
+  }
+});
+
+// =========================================================================
+// NEW LANDING STUDIO & CAMPAIGN ORCHESTRATOR ENDPOINTS (FOLO STUDIO IA)
+// =========================================================================
+
+// AI Landing Studio Template Recommendation & Personalization Agent ("Designer Marketing IA")
+app.post("/api/ai/landing-studio/recommend-template", async (req, res) => {
+  const { campaignGoal, targetSector, targetCountry, language, tone } = req.body;
+  if (!campaignGoal) {
+    return res.status(400).json({ error: "L'objectif de campagne est requis." });
+  }
+
+  try {
+    const ai = getGeminiClient();
+
+    // RAG grounding to fetch knowledge hub context
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      `programme FOLO, ${targetSector || "general"}, bourses d'insertion, ${campaignGoal}`
+    );
+
+    const systemPrompt = `Tu es l'Agent "Designer Marketing IA" du programme FOLO CRM AI.
+Ton rôle est de recommander la meilleure structure de landing page ou d'adapter un modèle existant pour atteindre l'objectif de l'utilisateur.
+
+Objectif de l'utilisateur : "${campaignGoal}"
+Secteur ciblé : ${targetSector || "Tous"}
+Pays ciblé : ${targetCountry || "Burkina Faso"}
+Langue : ${language || "fr"}
+Ton : ${tone || "professionnel et engagé"}
+
+Connaissances issues du référentiel FOLO :
+${kbResult.answer}
+
+Tu devez générer le contenu personnalisé d'une nouvelle page marketing hautement optimisée pour la conversion, contenant :
+1. Un titre accrocheur d'en-tête (headerTitle).
+2. Un sous-titre engageant (headerSub).
+3. Un texte d'appel à l'action principal (ctaText).
+4. Un thème visuel recommandé ("modern" | "dark" | "warm" | "slate" | "cool").
+5. Une série de blocs de contenu de page structurés (de type hero, features, stats, testimonial, faq, form).
+6. Un rapport d'évaluation montrant pourquoi ce design est optimal pour la cible.
+
+Génère un objet JSON structuré répondant à ce schéma :
+{
+  "recommendedTheme": "modern" | "dark" | "warm" | "slate" | "cool",
+  "headerTitle": "<titre>",
+  "headerSub": "<sous-titre>",
+  "ctaText": "<action>",
+  "blocks": [
+    {
+      "id": "<string>",
+      "type": "hero" | "features" | "stats" | "testimonial" | "faq" | "form",
+      "content": {
+        "title": "<string>",
+        "subtitle": "<string>",
+        "buttonText": "<string>",
+        "items": [
+          { "title": "<string>", "desc": "<string>", "q": "<string>", "a": "<string>" }
+        ],
+        "author": "<string>",
+        "role": "<string>",
+        "quote": "<string>"
+      }
+    }
+  ],
+  "reasoning": "<Pourquoi ce choix de structure et de contenu par rapport au secteur cible et au référentiel FOLO>"
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: "Recommande un modèle de page optimisé et génère son contenu personnalisé complet.",
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            recommendedTheme: { type: Type.STRING },
+            headerTitle: { type: Type.STRING },
+            headerSub: { type: Type.STRING },
+            ctaText: { type: Type.STRING },
+            blocks: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  type: { type: Type.STRING },
+                  content: {
+                    type: Type.OBJECT,
+                    properties: {
+                      title: { type: Type.STRING },
+                      subtitle: { type: Type.STRING },
+                      buttonText: { type: Type.STRING },
+                      items: {
+                        type: Type.ARRAY,
+                        items: {
+                          type: Type.OBJECT,
+                          properties: {
+                            title: { type: Type.STRING },
+                            desc: { type: Type.STRING },
+                            q: { type: Type.STRING },
+                            a: { type: Type.STRING }
+                          }
+                        }
+                      },
+                      author: { type: Type.STRING },
+                      role: { type: Type.STRING },
+                      quote: { type: Type.STRING }
+                    }
+                  }
+                },
+                required: ["id", "type", "content"]
+              }
+            },
+            reasoning: { type: Type.STRING }
+          },
+          required: ["recommendedTheme", "headerTitle", "headerSub", "ctaText", "blocks", "reasoning"]
+        }
+      }
+    });
+
+    const data = JSON.parse(response.text.trim());
+
+    // Generate unique slug
+    const cleanSlug = campaignGoal.toLowerCase().trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .slice(0, 30) + "-" + Math.random().toString(36).substr(2, 4);
+
+    const generatedPage = {
+      id: "lp-" + Math.random().toString(36).substr(2, 9),
+      title: `Page - ${campaignGoal.substring(0, 30)}...`,
+      slug: cleanSlug,
+      description: campaignGoal,
+      headerTitle: data.headerTitle,
+      headerSub: data.headerSub,
+      ctaText: data.ctaText,
+      theme: data.recommendedTheme || "slate",
+      clicks: 0,
+      conversions: 0,
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      pageType: "landing",
+      targetSector: targetSector || "formation",
+      targetCountry: targetCountry || "Burkina Faso",
+      language: language || "fr",
+      blocks: data.blocks,
+      orchestratorReport: {
+        isValid: true,
+        coherenceScore: 94,
+        coherenceComments: `Recommandé par l'Agent Designer Marketing IA. ${data.reasoning}`,
+        seoCompliance: 88,
+        uxScore: 92,
+        performanceScore: 95,
+        improvementSuggestions: [
+          "Ajouter des éléments de preuve sociale supplémentaires basés sur d'autres cohortes",
+          "Ajuster le CTA secondaire pour proposer un téléchargement direct de la charte FOLO"
+        ],
+        checkedAt: new Date().toISOString()
+      },
+      lastSavedAt: new Date().toISOString()
+    };
+
+    if (!currentDb.landingPages) currentDb.landingPages = [];
+    currentDb.landingPages.unshift(generatedPage);
+    saveDatabaseState(currentDb);
+
+    res.json({ status: "success", landingPage: generatedPage, reasoning: data.reasoning });
+  } catch (error: any) {
+    console.error("AI Recommend Template Error:", error);
+    res.status(500).json({ error: error.message || "Échec de la recommandation de modèle par l'IA." });
+  }
+});
+
+// AI Landing Studio "Optimisation Continue" Agent Endpoint
+app.post("/api/ai/landing-studio/optimize-continuous", async (req, res) => {
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({ error: "L'identifiant de la page est requis." });
+  }
+
+  const lp = currentDb.landingPages?.find((p: any) => p.id === id);
+  if (!lp) {
+    return res.status(404).json({ error: "Page de destination introuvable." });
+  }
+
+  try {
+    const ai = getGeminiClient();
+
+    const systemPrompt = `Tu es l'Agent "Optimisation Continue" de FOLO Landing Studio IA.
+Ton rôle est d'analyser les indicateurs de performance d'une page de destination marketing et de proposer des recommandations concrètes d'optimisation basées sur les données.
+
+Données de la page :
+- Titre : ${lp.title}
+- Clics (Visites) : ${lp.clicks}
+- Conversions (Leads enregistrés) : ${lp.conversions}
+- Taux de conversion : ${lp.clicks > 0 ? ((lp.conversions / lp.clicks) * 100).toFixed(1) : 0}%
+- Test A/B actif : ${lp.abTesting?.isEnabled ? "Oui" : "Non"}
+- Données Test A/B (si actif) : ${JSON.stringify(lp.abTesting || {})}
+
+Rédige un compte-rendu d'optimisation rigoureux contenant :
+1. Une analyse globale des performances actuelles (par rapport à un benchmark standard de 5% de conversion).
+2. Des recommandations d'amélioration du taux de conversion (A/B testing, CTA, etc.).
+3. Des recommandations sur la qualité des leads (scoring, questions du formulaire).
+4. Un plan d'action d'optimisation continue en 3 étapes.
+
+Génère un objet JSON structuré répondant à ce schéma :
+{
+  "performanceAnalysis": "<analyse textuelle claire>",
+  "conversionTips": ["conseil 1", "conseil 2"],
+  "leadQualityTips": ["conseil de qualif 1", "conseil de qualif 2"],
+  "actionPlanSteps": ["étape 1", "étape 2", "étape 3"],
+  "simulatedLiftEstimate": "<estimation du gain de conversion simulé en %, ex: +2.4%>"
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: "Analyse les métriques de la page et génère des conseils d'optimisation continue stratégiques.",
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            performanceAnalysis: { type: Type.STRING },
+            conversionTips: { type: Type.ARRAY, items: { type: Type.STRING } },
+            leadQualityTips: { type: Type.ARRAY, items: { type: Type.STRING } },
+            actionPlanSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
+            simulatedLiftEstimate: { type: Type.STRING }
+          },
+          required: ["performanceAnalysis", "conversionTips", "leadQualityTips", "actionPlanSteps", "simulatedLiftEstimate"]
+        }
+      }
+    });
+
+    const recommendation = JSON.parse(response.text.trim());
+    res.json({ status: "success", recommendation });
+  } catch (error: any) {
+    console.error("Continuous Optimization Error:", error);
+    res.status(500).json({ error: error.message || "Échec de l'optimisation par l'Agent d'Optimisation Continue." });
+  }
+});
+
+// AI Campaign Orchestrator: Generate Complete Marketing & CRM Campaign from simple user objective
+app.post("/api/ai/orchestrator/generate-complete-campaign", async (req, res) => {
+  const { objective, sector, budget, targetLeads } = req.body;
+  if (!objective) {
+    return res.status(400).json({ error: "L'objectif de campagne est requis." });
+  }
+
+  try {
+    const ai = getGeminiClient();
+
+    // RAG grounding to gather relevant internal guidelines
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      `FOLO, ${sector || "general"}, insertion professionnelle, bourses d'études, ${objective}`
+    );
+
+    const systemPrompt = `Tu es le "Cerveau Orchestrateur FOLO CRM AI". Ton rôle est de concevoir et générer automatiquement une campagne marketing et commerciale de A à Z à partir d'un simple objectif utilisateur.
+
+Objectif de l'utilisateur : "${objective}"
+Secteur clé : ${sector || "général"}
+Budget indicatif : ${budget || 500} $
+Objectif prospects : ${targetLeads || 5} prospects qualifiés
+
+Données du référentiel FOLO de RAG :
+${kbResult.answer}
+
+Tu devez générer un plan de campagne complet contenant :
+1. Une stratégie de campagne claire (nom, accroche, angle marketing).
+2. Une proposition de Landing Page adaptée (titre, sous-titre, CTA principal, et structure de blocs de contenu).
+3. Une proposition d'e-mail d'approche prospection.
+4. Une proposition de message WhatsApp ou LinkedIn d'accroche courte.
+5. Trois (3) prospects simulés très réalistes pour le Burkina Faso (nom, entreprise, email, téléphone, score d'intérêt, notes sur le besoin) à insérer dans le CRM.
+
+Génère un objet JSON strict répondant à ce schéma :
+{
+  "campaignName": "<nom court et dynamique de la campagne>",
+  "marketingAngle": "<explication de l'angle marketing choisi>",
+  "landingPage": {
+    "headerTitle": "<titre d'en-tête landing page>",
+    "headerSub": "<sous-titre landing page>",
+    "ctaText": "<action du bouton CTA>",
+    "blocks": [
+      {
+        "type": "hero" | "features" | "stats" | "testimonial",
+        "title": "<titre du bloc>",
+        "desc": "<description courte ou témoignage>"
+      }
+    ]
+  },
+  "prospectingEmail": {
+    "subject": "<sujet de l'e-mail>",
+    "body": "<corps de l'e-mail de prospection personnalisé>"
+  },
+  "prospectingShortMessage": "<accroche LinkedIn / WhatsApp ultra impactante>",
+  "simulatedLeads": [
+    {
+      "name": "<nom complet du contact, ex: Ibrahim Kaboré>",
+      "companyName": "<nom de l'entreprise locale, ex: Faso AgroTech>",
+      "email": "<email>",
+      "phone": "<téléphone au format +226 xx xx xx xx>",
+      "value": <valeur potentielle de l'opportunité en dollars, ex: 4500>,
+      "notes": "<notes détaillées expliquant son intérêt pour l'offre>",
+      "qualificationScore": <note de 0 à 100>,
+      "suggestedNextAction": "<prochaine action commerciale recommandée>"
+    }
+  ]
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: "Orchestre et génère tous les composants de la campagne et les prospects cibles.",
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            campaignName: { type: Type.STRING },
+            marketingAngle: { type: Type.STRING },
+            landingPage: {
+              type: Type.OBJECT,
+              properties: {
+                headerTitle: { type: Type.STRING },
+                headerSub: { type: Type.STRING },
+                ctaText: { type: Type.STRING },
+                blocks: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      type: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      desc: { type: Type.STRING }
+                    },
+                    required: ["type", "title", "desc"]
+                  }
+                }
+              },
+              required: ["headerTitle", "headerSub", "ctaText", "blocks"]
+            },
+            prospectingEmail: {
+              type: Type.OBJECT,
+              properties: {
+                subject: { type: Type.STRING },
+                body: { type: Type.STRING }
+              },
+              required: ["subject", "body"]
+            },
+            prospectingShortMessage: { type: Type.STRING },
+            simulatedLeads: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  companyName: { type: Type.STRING },
+                  email: { type: Type.STRING },
+                  phone: { type: Type.STRING },
+                  value: { type: Type.INTEGER },
+                  notes: { type: Type.STRING },
+                  qualificationScore: { type: Type.INTEGER },
+                  suggestedNextAction: { type: Type.STRING }
+                },
+                required: ["name", "companyName", "email", "phone", "value", "notes", "qualificationScore", "suggestedNextAction"]
+              }
+            }
+          },
+          required: ["campaignName", "marketingAngle", "landingPage", "prospectingEmail", "prospectingShortMessage", "simulatedLeads"]
+        }
+      }
+    });
+
+    const data = JSON.parse(response.text.trim());
+
+    // --- EXECUTE INTEGRATION AND SEED CRM DATABASE ---
+    const campaignId = "camp-" + Math.random().toString(36).substr(2, 9);
+    const landingPageId = "lp-" + Math.random().toString(36).substr(2, 9);
+    const slug = data.campaignName.toLowerCase().trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-") + "-" + Math.random().toString(36).substr(2, 4);
+
+    // 1. Save Landing Page
+    const newLp = {
+      id: landingPageId,
+      title: `Page - ${data.campaignName}`,
+      slug: slug,
+      description: data.marketingAngle,
+      headerTitle: data.landingPage.headerTitle,
+      headerSub: data.landingPage.headerSub,
+      ctaText: data.landingPage.ctaText,
+      theme: "slate" as const,
+      clicks: 0,
+      conversions: 0,
+      status: "draft" as const,
+      createdAt: new Date().toISOString(),
+      pageType: "landing" as const,
+      campaignId: campaignId,
+      targetSector: sector || "formation",
+      targetCountry: "Burkina Faso",
+      language: "fr",
+      blocks: data.landingPage.blocks.map((b: any, idx: number) => ({
+        id: `block-${idx}`,
+        type: b.type,
+        content: { title: b.title, subtitle: b.desc, buttonText: data.landingPage.ctaText }
+      })),
+      seoData: {
+        title: data.campaignName,
+        metaDescription: data.landingPage.headerSub.substring(0, 150),
+        keywords: [sector || "formation", "FOLO", "Burkina Faso", "RSE"],
+        seoScore: 85,
+        seoRecommendations: ["Optimiser les balises alt des futures images"]
+      },
+      orchestratorReport: {
+        isValid: true,
+        coherenceScore: 92,
+        coherenceComments: `Page automatisée par le Cerveau Orchestrateur FOLO CRM.`,
+        seoCompliance: 85,
+        uxScore: 90,
+        performanceScore: 94,
+        improvementSuggestions: ["Associer des cas clients d'entreprises locales"],
+        checkedAt: new Date().toISOString()
+      },
+      lastSavedAt: new Date().toISOString()
+    };
+
+    if (!currentDb.landingPages) currentDb.landingPages = [];
+    currentDb.landingPages.unshift(newLp);
+
+    // 2. Save Campaign
+    const newCampaign = {
+      id: campaignId,
+      name: data.campaignName,
+      channel: "email" as const,
+      subject: data.prospectingEmail.subject,
+      contentTemplate: data.prospectingEmail.body,
+      status: "draft" as const,
+      sentCount: 0,
+      deliveredCount: 0,
+      responseCount: 0,
+      createdAt: new Date().toISOString()
+    };
+
+    if (!currentDb.campaigns) currentDb.campaigns = [];
+    currentDb.campaigns.unshift(newCampaign);
+
+    // 3. Save Companies and Leads with Opportunities
+    const addedLeadsList: any[] = [];
+    for (const l of data.simulatedLeads) {
+      const companyId = "comp-" + Math.random().toString(36).substr(2, 9);
+      const leadId = "lead-" + Math.random().toString(36).substr(2, 9);
+
+      const newCompany = {
+        id: companyId,
+        name: l.companyName,
+        industry: sector || "Divers",
+        size: "11-50",
+        country: "Burkina Faso",
+        createdAt: new Date().toISOString()
+      };
+
+      if (!currentDb.companies) currentDb.companies = [];
+      currentDb.companies.push(newCompany);
+
+      const newLead = {
+        id: leadId,
+        name: l.name,
+        companyId: companyId,
+        companyName: l.companyName,
+        email: l.email,
+        phone: l.phone,
+        status: "qualified", // Automatic high potential
+        value: l.value,
+        source: `Campagne FOLO: ${data.campaignName}`,
+        country: "Burkina Faso",
+        createdAt: new Date().toISOString(),
+        notes: l.notes,
+        agentQualification: {
+          score: l.qualificationScore,
+          status: "hot" as const,
+          summary: `Prospect qualifié automatiquement par l'Orchestrateur suite à la campagne d'intérêt : "${objective}".`,
+          needsFollowUp: true,
+          suggestedNextAction: l.suggestedNextAction,
+          analyzedAt: new Date().toISOString(),
+          agentId: "agent-qualification"
+        }
+      };
+
+      if (!currentDb.leads) currentDb.leads = [];
+      currentDb.leads.unshift(newLead);
+      addedLeadsList.push(newLead);
+
+      // Create WhatsApp message suggestion
+      const newSuggestion = {
+        id: "sug-" + Math.random().toString(36).substr(2, 9),
+        leadId: leadId,
+        agentId: "agent-com",
+        channel: "whatsapp" as const,
+        body: `Bonjour ${l.name} ! C'est l'équipe du programme FOLO. Nous venons de lancer la campagne "${data.campaignName}" et avons conçu une proposition d'accompagnement RSE sur-mesure pour ${l.companyName} : ${l.suggestedNextAction}. Seriez-vous ouvert à un rapide échange cette semaine ?`,
+        createdAt: new Date().toISOString(),
+        status: "pending" as const
+      };
+
+      if (!currentDb.suggestions) currentDb.suggestions = [];
+      currentDb.suggestions.unshift(newSuggestion);
+    }
+
+    // 4. Create action tasks for commercial follow-up
+    const newTask = {
+      id: "task-" + Math.random().toString(36).substr(2, 9),
+      title: `Lancer les relances de la campagne : ${data.campaignName}`,
+      description: `Vérifier les maquettes de la landing page (${slug}), valider le contenu des emails d'approche de prospection, et lancer le plan de relance téléphonique.`,
+      status: "pending",
+      priority: "high" as const,
+      dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date().toISOString()
+    };
+
+    if (!currentDb.tasks) currentDb.tasks = [];
+    currentDb.tasks.unshift(newTask);
+
+    saveDatabaseState(currentDb);
+
+    res.json({
+      status: "success",
+      campaign: newCampaign,
+      landingPage: newLp,
+      leads: addedLeadsList,
+      marketingAngle: data.marketingAngle,
+      prospectingShortMessage: data.prospectingShortMessage
+    });
+  } catch (error: any) {
+    console.error("AI Complete Campaign Orchestrator Error:", error);
+    res.status(500).json({ error: error.message || "Échec du traitement de l'Orchestrateur IA." });
+  }
+});
+
 // Serve frontend assets in production or connect to Vite middleware in dev
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

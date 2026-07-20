@@ -21,9 +21,10 @@ import { OpportunitiesView } from "./components/OpportunitiesView";
 import { OrchestratorView } from "./components/OrchestratorView";
 import { KnowledgeHubView } from "./components/KnowledgeHubView";
 import { BusinessDesignStudioView } from "./components/BusinessDesignStudioView";
-import { LayoutDashboard, Users, Target, Volume2, CheckSquare, Brain, FileText, Menu, X, HelpCircle, Loader2, Compass, Cpu, BookOpen, Sparkles } from "lucide-react";
+import { LandingStudioView } from "./components/LandingStudioView";
+import { LayoutDashboard, Users, Target, Volume2, CheckSquare, Brain, FileText, Menu, X, HelpCircle, Loader2, Compass, Cpu, BookOpen, Sparkles, Globe } from "lucide-react";
 
-type CRMTab = "dashboard" | "leads" | "pipeline" | "campaigns" | "tasks" | "agents" | "reporting" | "opportunities" | "orchestrator" | "knowledge" | "business-studio";
+type CRMTab = "dashboard" | "leads" | "pipeline" | "campaigns" | "tasks" | "agents" | "reporting" | "opportunities" | "orchestrator" | "knowledge" | "business-studio" | "landing-studio";
 
 function MainAppLayout() {
   const { isLoading, error } = useCRM();
@@ -55,23 +56,56 @@ function MainAppLayout() {
         return <KnowledgeHubView />;
       case "business-studio":
         return <BusinessDesignStudioView />;
+      case "landing-studio":
+        return <LandingStudioView />;
       default:
         return <DashboardView />;
     }
   };
 
-  const navItems = [
-    { id: "dashboard", label: "Tableau de Bord", icon: LayoutDashboard },
-    { id: "orchestrator", label: "Orchestrateur & Budgets", icon: Cpu },
-    { id: "knowledge", label: "Cerveau FOLO (RAG)", icon: BookOpen },
-    { id: "business-studio", label: "Business Design Studio", icon: Sparkles },
-    { id: "opportunities", label: "Opportunités détectées", icon: Compass },
-    { id: "leads", label: "Prospects & Partenaires", icon: Users },
-    { id: "pipeline", label: "Tunnel Commercial (Kanban)", icon: Target },
-    { id: "campaigns", label: "Campagnes & Landing", icon: Volume2 },
-    { id: "tasks", label: "Tâches & Suggestions", icon: CheckSquare },
-    { id: "agents", label: "Équipe d'Agents AI", icon: Brain },
-    { id: "reporting", label: "Rapport d'Audit (Auditeur)", icon: FileText }
+  const studios = [
+    {
+      name: "CRM Studio",
+      accent: "border-emerald-500/30",
+      items: [
+        { id: "dashboard", label: "Tableau de Bord", icon: LayoutDashboard },
+        { id: "leads", label: "Prospects & Partenaires", icon: Users },
+        { id: "pipeline", label: "Tunnel Commercial", icon: Target },
+        { id: "tasks", label: "Tâches & Actions", icon: CheckSquare }
+      ]
+    },
+    {
+      name: "Marketing Studio",
+      accent: "border-indigo-500/30",
+      items: [
+        { id: "landing-studio", label: "FOLO Landing Studio", icon: Globe },
+        { id: "campaigns", label: "Campagnes & Landing", icon: Volume2 }
+      ]
+    },
+    {
+      name: "Business Design Studio",
+      accent: "border-amber-500/30",
+      items: [
+        { id: "business-studio", label: "Design d'Offres & AO", icon: Sparkles },
+        { id: "opportunities", label: "Opportunités Détectées", icon: Compass }
+      ]
+    },
+    {
+      name: "Knowledge Studio",
+      accent: "border-blue-500/30",
+      items: [
+        { id: "knowledge", label: "Cerveau FOLO (RAG)", icon: BookOpen }
+      ]
+    },
+    {
+      name: "AI Studio",
+      accent: "border-purple-500/30",
+      items: [
+        { id: "orchestrator", label: "Orchestrateur IA", icon: Cpu },
+        { id: "agents", label: "Équipe d'Agents AI", icon: Brain },
+        { id: "reporting", label: "Rapport d'Audit (Auditeur)", icon: FileText }
+      ]
+    }
   ];
 
   if (isLoading) {
@@ -107,9 +141,9 @@ function MainAppLayout() {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="space-y-6">
+        <div className="space-y-5 overflow-y-auto max-h-[85vh] pr-1 scrollbar-thin scrollbar-thumb-slate-800">
           {/* Header & Logo */}
-          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-800/60">
+          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-800/60 shrink-0">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-600 flex items-center justify-center font-black text-white text-base">
               F
             </div>
@@ -119,30 +153,39 @@ function MainAppLayout() {
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="space-y-1.5">
-            {navItems.map(item => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id as any);
-                    setIsSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold tracking-wide transition ${
-                    isActive
-                      ? "bg-emerald-600 text-white shadow-sm font-bold"
-                      : "hover:bg-slate-800/60 text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-500"}`} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          {/* Navigation Links by Studio */}
+          <div className="space-y-4">
+            {studios.map(studio => (
+              <div key={studio.name} className={`space-y-1 pl-1 border-l-2 ${studio.accent}`}>
+                <span className="text-[9px] font-bold text-slate-500 tracking-widest uppercase block pl-2 pb-0.5">
+                  {studio.name}
+                </span>
+                <nav className="space-y-1">
+                  {studio.items.map(item => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id as any);
+                          setIsSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[11px] font-semibold tracking-wide transition ${
+                          isActive
+                            ? "bg-emerald-600 text-white shadow-sm font-bold"
+                            : "hover:bg-slate-800/60 text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-white" : "text-slate-500"}`} />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Footer info in sidebar */}

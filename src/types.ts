@@ -60,6 +60,69 @@ export interface Task {
   createdAt: string;
 }
 
+export interface LandingPageBlock {
+  id: string;
+  type: "hero" | "features" | "stats" | "text-image" | "pricing" | "form" | "footer" | "faq" | "logos" | "testimonial";
+  content: {
+    title?: string;
+    subtitle?: string;
+    text?: string;
+    image?: string;
+    buttonText?: string;
+    fields?: { name: string; label: string; type: string; required: boolean }[];
+    items?: { title: string; text: string; value?: string; icon?: string }[];
+    features?: { title: string; text: string }[];
+    stats?: { value: string; label: string }[];
+    quote?: string;
+    author?: string;
+    role?: string;
+  };
+}
+
+export interface LandingPageVersion {
+  versionId: string;
+  timestamp: string;
+  title: string;
+  blocks: LandingPageBlock[];
+}
+
+export interface LandingPageSEO {
+  title: string;
+  metaDescription: string;
+  keywords: string[];
+  schemaOrg?: string;
+  schemaMarkup?: string;
+  openGraph?: { title: string; description: string; image: string };
+  twitterCard?: { card: string; title: string; description: string; image: string };
+  seoScore: number;
+  seoRecommendations: string[];
+}
+
+export interface LandingPageOrchestratorReport {
+  isValid: boolean;
+  coherenceScore: number;
+  coherenceComments: string;
+  seoCompliance: number;
+  uxScore: number;
+  performanceScore: number;
+  improvementSuggestions: string[];
+  checkedAt: string;
+}
+
+export interface LandingPageABTesting {
+  isAbTest?: boolean;
+  isEnabled?: boolean;
+  variantOf?: string;
+  variantLetter?: "A" | "B";
+  variantBName?: string;
+  clicksVariantB?: number;
+  conversionsVariantB?: number;
+  meetingsBooked?: number;
+  salesGenerated?: number;
+  leadsQualityScore?: number;
+  conversionRules?: string;
+}
+
 export interface LandingPage {
   id: string;
   title: string;
@@ -68,11 +131,28 @@ export interface LandingPage {
   headerTitle: string;
   headerSub: string;
   ctaText: string;
-  theme: "modern" | "dark" | "warm";
+  theme: "modern" | "dark" | "warm" | "slate" | "cool";
   clicks: number;
   conversions: number;
   status: "draft" | "published";
   createdAt: string;
+  // FOLO Landing Studio IA Extensions
+  pageType?: "landing" | "sales" | "registration" | "event" | "minisite" | "tender" | "services" | "smartform";
+  campaignId?: string;
+  targetSector?: "formation" | "ong" | "collectivites" | "pme" | "appels_offres";
+  targetCountry?: string;
+  language?: string;
+  htmlContent?: string;
+  cssContent?: string;
+  jsContent?: string;
+  blocks?: LandingPageBlock[];
+  seoData?: LandingPageSEO;
+  orchestratorReport?: LandingPageOrchestratorReport;
+  abTesting?: LandingPageABTesting;
+  versions?: LandingPageVersion[];
+  lastSavedAt?: string;
+  isTemplate?: boolean;
+  category?: string;
 }
 
 export interface Campaign {
