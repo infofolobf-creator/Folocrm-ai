@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Lead, Company, Task, Campaign, LandingPage, VeilleAlert, MessageSuggestion, LeadStatus } from "./types";
+import { Lead, Company, Task, Campaign, LandingPage, VeilleAlert, MessageSuggestion, LeadStatus, OrchestratorConfig, OrchestratorPlan } from "./types";
 
 interface CRMContextType {
   leads: Lead[];
@@ -14,6 +14,8 @@ interface CRMContextType {
   landingPages: LandingPage[];
   alerts: VeilleAlert[];
   suggestions: MessageSuggestion[];
+  orchestratorConfig: OrchestratorConfig | null;
+  orchestratorPlans: OrchestratorPlan[];
   isLoading: boolean;
   error: string | null;
   refreshDb: () => Promise<void>;
@@ -30,6 +32,9 @@ interface CRMContextType {
   suggestMessageAI: (leadId: string, channel: string, goal: string) => Promise<void>;
   triggerVeilleAlertAI: () => Promise<void>;
   approveSuggestion: (sugId: string) => Promise<void>;
+  updateOrchestratorConfig: (config: OrchestratorConfig) => Promise<void>;
+  buildOrchestratorPlanAI: (params: { goalDescription: string; targetLeadsCount: number; maxBudget: number; useOnlyFree: boolean; mode: string }) => Promise<void>;
+  executeOrchestratorStepAI: (planId: string, stepIndex: number) => Promise<void>;
 }
 
 const CRMContext = createContext<CRMContextType | undefined>(undefined);
@@ -42,6 +47,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [landingPages, setLandingPages] = useState<LandingPage[]>([]);
   const [alerts, setAlerts] = useState<VeilleAlert[]>([]);
   const [suggestions, setSuggestions] = useState<MessageSuggestion[]>([]);
+  const [orchestratorConfig, setOrchestratorConfig] = useState<OrchestratorConfig | null>(null);
+  const [orchestratorPlans, setOrchestratorPlans] = useState<OrchestratorPlan[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +66,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLandingPages(data.landingPages || []);
       setAlerts(data.alerts || []);
       setSuggestions(data.suggestions || []);
+      setOrchestratorConfig(data.orchestratorConfig || null);
+      setOrchestratorPlans(data.orchestratorPlans || []);
       setError(null);
     } catch (err: any) {
       console.error("Database fetch error:", err);
@@ -74,21 +83,28 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const saveDb = async (updatedState: any) => {
     try {
+      const stateToSave = {
+        orchestratorConfig,
+        orchestratorPlans,
+        ...updatedState
+      };
       const res = await fetch("/api/db", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedState)
+        body: JSON.stringify(stateToSave)
       });
       if (!res.ok) throw new Error("Erreur d'enregistrement.");
       const data = await res.json();
       
-      setLeads(data.data.leads);
-      setCompanies(data.data.companies);
-      setTasks(data.data.tasks);
-      setCampaigns(data.data.campaigns);
-      setLandingPages(data.data.landingPages);
-      setAlerts(data.data.alerts);
-      setSuggestions(data.data.suggestions);
+      setLeads(data.data.leads || []);
+      setCompanies(data.data.companies || []);
+      setTasks(data.data.tasks || []);
+      setCampaigns(data.data.campaigns || []);
+      setLandingPages(data.data.landingPages || []);
+      setAlerts(data.data.alerts || []);
+      setSuggestions(data.data.suggestions || []);
+      setOrchestratorConfig(data.data.orchestratorConfig || null);
+      setOrchestratorPlans(data.data.orchestratorPlans || []);
     } catch (err) {
       console.error("Database save error:", err);
       setError("Échec de la synchronisation des données avec le serveur.");
@@ -287,6 +303,51 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await saveDb(newState);
   };
 
+  const updateOrchestratorConfig = async (newConfig: OrchestratorConfig) => {
+    setOrchestratorConfig(newConfig);
+    const newState = {
+      leads,
+      companies,
+      tasks,
+      campaigns,
+      landingPages,
+      alerts,
+      suggestions,
+      orchestratorConfig: newConfig,
+      orchestratorPlans
+    };
+    await saveDb(newState);
+  };
+
+  const buildOrchestratorPlanAI = async (params: { goalDescription: string; targetLeadsCount: number; maxBudget: number; useOnlyFree: boolean; mode: string }) => {
+    const res = await fetch("/api/ai/orchestrator/build-plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...params,
+        policies: orchestratorConfig?.policies
+      })
+    });
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "La création du plan d'orchestration a échoué.");
+    }
+    await refreshDb();
+  };
+
+  const executeOrchestratorStepAI = async (planId: string, stepIndex: number) => {
+    const res = await fetch("/api/ai/orchestrator/execute-step", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ planId, stepIndex })
+    });
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.error || "L'exécution de l'étape a échoué.");
+    }
+    await refreshDb();
+  };
+
   return (
     <CRMContext.Provider
       value={{
@@ -297,6 +358,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         landingPages,
         alerts,
         suggestions,
+        orchestratorConfig,
+        orchestratorPlans,
         isLoading,
         error,
         refreshDb,
@@ -312,7 +375,10 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         qualifyLeadAI,
         suggestMessageAI,
         triggerVeilleAlertAI,
-        approveSuggestion
+        approveSuggestion,
+        updateOrchestratorConfig,
+        buildOrchestratorPlanAI,
+        executeOrchestratorStepAI
       }}
     >
       {children}

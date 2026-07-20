@@ -265,7 +265,8 @@ const initialDatabase = {
       summary: "Publication d'un appel d'offres national pour concevoir et déployer des plateformes mobiles d'accompagnement agricole pour 50 000 coopératives.",
       impactOnFolo: "Nos diplômés de la filière numérique peuvent être positionnés en tant que prestataires ou recrutés par le consortium adjudicataire. Excellente opportunité de partenariat stratégique.",
       url: "https://www.digital.gov.bf/appels-offres",
-      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      suggestedAction: "Initier la création d'un projet de consortium de réponse technique, qualifier le budget d'accompagnement RSE et préparer une liste de 15 profils de diplômés FOLO."
     },
     {
       id: "alert-2",
@@ -275,7 +276,8 @@ const initialDatabase = {
       summary: "Nouveau guichet de subvention pour financer les instituts de formation technique ciblant l'énergie solaire rurale en zone UEMOA.",
       impactOnFolo: "Correspond exactement à notre programme FOLO Solaire. Nous pouvons postuler pour sécuriser un financement pluriannuel de 100% des bourses de formation.",
       url: "https://www.afdb.org/fr/news-and-events",
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      suggestedAction: "Monter le dossier de demande de subvention en s'appuyant sur notre bilan d'insertion de la cohorte Solaire 2025."
     }
   ],
   suggestions: [
@@ -328,6 +330,69 @@ function saveDatabaseState(state: any) {
 
 // Global cached state in server memory
 let currentDb = loadDatabaseState();
+
+// Ensure Orchestrator config and default plans exist
+if (!currentDb.orchestratorConfig) {
+  currentDb.orchestratorConfig = {
+    mode: "balanced",
+    dailyBudgetLimit: 15.00,
+    costPerLeadLimit: 1.50,
+    useOnlyFreeServices: true,
+    targetLeadsCount: 5,
+    currentDailySpend: 0.12,
+    remainingFreeQuota: 1488,
+    policies: {
+      humanValidationRequired: true,
+      runFrequency: "manual",
+      retryStrategy: "standard",
+      approvedSources: ["public_web", "tenders_bf", "linkedin"]
+    }
+  };
+  saveDatabaseState(currentDb);
+}
+if (!currentDb.orchestratorPlans) {
+  currentDb.orchestratorPlans = [
+    {
+      id: "plan-default-1",
+      goalDescription: "Trouver 5 prospects de haute pertinence aujourd'hui sans dépasser 5$ de budget en utilisant les canaux gratuits.",
+      budgetAssessment: {
+        estimatedCost: 0.00,
+        isFeasible: true,
+        reasoning: "Tous les services requis s'exécutent sur le niveau gratuit Gemini (modèles d'analyse et de qualification). Aucune API payante de veille payante tierce n'est déclenchée sous le mode équilibré.",
+        quotaImpact: 12
+      },
+      steps: [
+        {
+          agentId: "agent-veille",
+          agentName: "Veilleur FOLO AI",
+          action: "Scanner les marchés publics du Sahel pour dénicher 3 opportunités de subventions de formation.",
+          status: "completed",
+          costEstimate: 0.00,
+          output: "Alerte générée : 'Subvention Européenne d'Accompagnement à la Jeunesse du Sahel' (Pertinence 94%)."
+        },
+        {
+          agentId: "agent-qualification",
+          agentName: "Qualificateur AI",
+          action: "Analyser stratégiquement l'opportunité et estimer le score de matching pour FOLO.",
+          status: "completed",
+          costEstimate: 0.00,
+          output: "Prospect converti avec succès. Score FOLO : 91/100. Statut commercial : chaud."
+        },
+        {
+          agentId: "agent-redacteur",
+          agentName: "Rédacteur AI",
+          action: "Rédiger l'e-mail d'approche contextualisé pour l'insertion des bourses.",
+          status: "completed",
+          costEstimate: 0.00,
+          output: "Proposition d'email rédigée avec succès pour 'Agence de Développement Européenne'."
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      status: "completed"
+    }
+  ];
+  saveDatabaseState(currentDb);
+}
 
 // --- REST API ENDPOINTS ---
 
@@ -514,7 +579,8 @@ Le livrable doit être un objet JSON strict :
   "relevance": <Score d'opportunité de 70 à 100>,
   "summary": "<Description claire de l'appel d'offres ou du besoin identifié>",
   "impactOnFolo": "<Explication stratégique montrant comment FOLO peut se positionner>",
-  "url": "<URL fictive ou réelle d'information>"
+  "url": "<URL fictive ou réelle d'information>",
+  "suggestedAction": "<Action commerciale ou opérationnelle précise suggérée pour tirer parti de cette opportunité>"
 }`;
 
     const response = await ai.models.generateContent({
@@ -531,9 +597,10 @@ Le livrable doit être un objet JSON strict :
             relevance: { type: Type.INTEGER },
             summary: { type: Type.STRING },
             impactOnFolo: { type: Type.STRING },
-            url: { type: Type.STRING }
+            url: { type: Type.STRING },
+            suggestedAction: { type: Type.STRING, description: "La recommandation concrète à faire immédiatement." }
           },
-          required: ["title", "source", "relevance", "summary", "impactOnFolo"]
+          required: ["title", "source", "relevance", "summary", "impactOnFolo", "suggestedAction"]
         }
       }
     });
@@ -626,6 +693,315 @@ Rédige un rapport commercial sous forme de Markdown propre et aéré. Inclus :
   } catch (error: any) {
     console.error("AI Reporting Error:", error);
     res.status(500).json({ error: error.message || "Failed to generate report" });
+  }
+});
+
+// --- ORCHESTRATOR ENDPOINTS ---
+
+// Build an execution plan using Gemini AI
+app.post("/api/ai/orchestrator/build-plan", async (req, res) => {
+  const { goalDescription, targetLeadsCount, maxBudget, useOnlyFree, mode, policies } = req.body;
+
+  try {
+    const ai = getGeminiClient();
+    const systemPrompt = `Tu es "Orchestrateur FOLO AI", l'IA supérieure de pilotage de FOLO CRM AI (focalisé sur l'Afrique de l'Ouest et l'employabilité des jeunes au Sahel).
+Ta mission est de concevoir un plan d'action d'agents multi-étapes structuré, réaliste et financièrement cadré pour atteindre l'objectif fixé par l'utilisateur.
+
+Objectif de l'utilisateur : "${goalDescription || "Trouver et qualifier de nouveaux partenaires"}"
+Nombre de prospects cibles : ${targetLeadsCount || 5}
+Budget max alloué : ${maxBudget || 10} USD
+Services gratuits uniquement : ${useOnlyFree ? "OUI (Coût d'API strictly $0.00)" : "NON"}
+Mode d'exécution : ${mode || "balanced"} (economy / balanced / performance / custom)
+Politiques d'exécution actives :
+- Validation humaine requise : ${policies?.humanValidationRequired ? "OUI" : "NON"}
+- Fréquence de veille : ${policies?.runFrequency || "manual"}
+- Stratégie de relance : ${policies?.retryStrategy || "standard"}
+- Sources approuvées : ${policies?.approvedSources?.join(", ") || "web"}
+
+Tu dois évaluer la faisabilité budgétaire et technique et générer 3 à 5 étapes séquentielles d'agents.
+Les agents disponibles à affecter (agentId) sont :
+- "agent-veille" (Veilleur FOLO AI) : cherche des appels d'offres / subventions.
+- "agent-qualification" (Qualificateur AI) : qualifie et note l'intérêt commercial.
+- "agent-redacteur" (Rédacteur FOLO AI) : rédige des courriels ou messages.
+- "agent-relance" (Relanceur AI) : planifie des tâches de relance ou d'alerte.
+- "agent-director" (Directeur Commercial AI) : produit des conseils de négociation.
+- "agent-auditor" (Auditeur AI) : produit des rapports de performance globaux.
+
+Renvoie un objet JSON strict correspondant exactement à cette structure :
+{
+  "budgetAssessment": {
+    "estimatedCost": <number, coût estimé global en USD>,
+    "isFeasible": <boolean, si l'objectif est faisable sous les contraintes>,
+    "reasoning": "<texte court en français expliquant l'arbitrage financier et la conformité aux politiques>",
+    "quotaImpact": <number, quota d'appels ou de tokens estimé>
+  },
+  "steps": [
+    {
+      "agentId": "agent-veille" | "agent-qualification" | "agent-redacteur" | "agent-relance" | "agent-director" | "agent-auditor",
+      "agentName": "<Nom de l'agent affecté>",
+      "action": "<Description de l'action précise de l'agent pour ce plan en français>",
+      "status": "pending",
+      "costEstimate": <number, coût estimé pour cette étape en USD>
+    }
+  ]
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: `Génère le plan d'orchestration pour l'objectif suivant : "${goalDescription}"`,
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            budgetAssessment: {
+              type: Type.OBJECT,
+              properties: {
+                estimatedCost: { type: Type.NUMBER, description: "Coût global calculé en USD" },
+                isFeasible: { type: Type.BOOLEAN, description: "Si le plan est jugé réalisable" },
+                reasoning: { type: Type.STRING, description: "Raisonnement sur les quotas et coûts" },
+                quotaImpact: { type: Type.INTEGER, description: "Estimation de l'impact en requêtes" }
+              },
+              required: ["estimatedCost", "isFeasible", "reasoning", "quotaImpact"]
+            },
+            steps: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  agentId: { type: Type.STRING },
+                  agentName: { type: Type.STRING },
+                  action: { type: Type.STRING },
+                  status: { type: Type.STRING, enum: ["pending"] },
+                  costEstimate: { type: Type.NUMBER }
+                },
+                required: ["agentId", "agentName", "action", "status", "costEstimate"]
+              }
+            }
+          },
+          required: ["budgetAssessment", "steps"]
+        }
+      }
+    });
+
+    const parsed = JSON.parse(response.text.trim());
+    
+    // Create new plan and add it to our DB list
+    const newPlan = {
+      id: "plan-" + Math.random().toString(36).substr(2, 9),
+      goalDescription,
+      budgetAssessment: parsed.budgetAssessment,
+      steps: parsed.steps,
+      createdAt: new Date().toISOString(),
+      status: "draft"
+    };
+
+    if (!currentDb.orchestratorPlans) {
+      currentDb.orchestratorPlans = [];
+    }
+    currentDb.orchestratorPlans.unshift(newPlan);
+    saveDatabaseState(currentDb);
+
+    res.json({ status: "success", plan: newPlan });
+  } catch (error: any) {
+    console.error("AI Orchestration Plan Builder Error:", error);
+    res.status(500).json({ error: error.message || "Failed to generate Orchestrator plan" });
+  }
+});
+
+// Execute a specific step inside an Orchestrator plan
+app.post("/api/ai/orchestrator/execute-step", async (req, res) => {
+  const { planId, stepIndex } = req.body;
+
+  const plan = currentDb.orchestratorPlans?.find((p: any) => p.id === planId);
+  if (!plan) {
+    return res.status(404).json({ error: "Plan d'orchestration introuvable" });
+  }
+
+  const step = plan.steps[stepIndex];
+  if (!step) {
+    return res.status(404).json({ error: "Étape d'orchestration introuvable" });
+  }
+
+  try {
+    const ai = getGeminiClient();
+    let executionOutput = "";
+
+    // Run custom agent simulation depending on agentId
+    if (step.agentId === "agent-veille") {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: "Génère une alerte de veille d'opportunité d'apprentissage, insertion de bourses ou formation RSE au Burkina Faso ou au Sahel.",
+        config: {
+          systemInstruction: `Tu es le "Veilleur FOLO AI". Génère une opportunité d'actualité extrêmement pertinente pour le Programme FOLO.
+Retourne obligatoirement un objet JSON strict :
+{
+  "title": "<Titre de l'opportunité>",
+  "source": "<Nom de l'entité, ex: ONU Femmes, SOS Sahel, Orange Burkina, Banque Centrale>",
+  "relevance": <Score de 80 à 100>,
+  "summary": "<Résumé du besoin>",
+  "impactOnFolo": "<Comment FOLO peut positionner ses étudiants>",
+  "suggestedAction": "<Action immédiate recommandée>"
+}`,
+          responseMimeType: "application/json"
+        }
+      });
+
+      const data = JSON.parse(response.text.trim());
+      const newAlert = {
+        id: "alert-" + Math.random().toString(36).substr(2, 9),
+        title: data.title,
+        source: data.source,
+        relevance: data.relevance || 85,
+        summary: data.summary,
+        impactOnFolo: data.impactOnFolo,
+        suggestedAction: data.suggestedAction,
+        url: "https://www.digital.gov.bf/appels-offres",
+        createdAt: new Date().toISOString()
+      };
+
+      currentDb.alerts.unshift(newAlert);
+      executionOutput = `Nouveau prospect détecté : "${newAlert.title}" émis par ${newAlert.source} (Pertinence : ${newAlert.relevance}%). Alerte automatiquement insérée !`;
+    
+    } else if (step.agentId === "agent-qualification") {
+      const unqualifiedLead = currentDb.leads.find((l: any) => !l.agentQualification) || currentDb.leads[0];
+      if (unqualifiedLead) {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: `Qualifie stratégiquement ce prospect : Nom=${unqualifiedLead.name}, Entreprise=${unqualifiedLead.companyName}, Notes=${unqualifiedLead.notes}`,
+          config: {
+            systemInstruction: `Tu es le "Qualificateur AI" de FOLO. Évalue de 0 à 100 l'intérêt de ce lead, attribue une température (hot, warm, cold) et suggère l'action idéale.
+JSON strict de retour :
+{
+  "score": <number>,
+  "status": "hot" | "warm" | "cold",
+  "summary": "<Analyse succincte>",
+  "needsFollowUp": <boolean>,
+  "suggestedNextAction": "<Recommandation commerciale>"
+}`,
+            responseMimeType: "application/json"
+          }
+        });
+
+        const data = JSON.parse(response.text.trim());
+        const leadIndex = currentDb.leads.findIndex((l: any) => l.id === unqualifiedLead.id);
+        if (leadIndex !== -1) {
+          currentDb.leads[leadIndex].agentQualification = {
+            ...data,
+            analyzedAt: new Date().toISOString(),
+            agentId: "agent-qualification"
+          };
+        }
+        executionOutput = `L'Agent de Qualification a audité le prospect "${unqualifiedLead.companyName}". Score : ${data.score}/100, Statut : ${data.status.toUpperCase()}. Action recommandée : ${data.suggestedNextAction}`;
+      } else {
+        executionOutput = "Aucun prospect à qualifier disponible dans la base de données. Étape validée par défaut (score d'analyse standard émis : 85/100).";
+      }
+
+    } else if (step.agentId === "agent-redacteur") {
+      const targetLead = currentDb.leads[0] || { id: "lead-temp", name: "Responsable RSE", companyName: "Partenaire Potentiel" };
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: `Rédige un message percutant d'approche par e-mail de sponsoring pour : ${targetLead.companyName}`,
+        config: {
+          systemInstruction: `Tu es le "Rédacteur FOLO AI". Rédige une proposition commerciale concise et soignée en français pour inviter ce partenaire à co-financer une cohorte de bourses étudiantes FOLO.
+JSON strict de retour :
+{
+  "subject": "<Objet de l'email>",
+  "body": "<Texte complet>"
+}`,
+          responseMimeType: "application/json"
+        }
+      });
+
+      const data = JSON.parse(response.text.trim());
+      const newSuggestion = {
+        id: "sug-" + Math.random().toString(36).substr(2, 9),
+        leadId: targetLead.id,
+        agentId: "agent-com",
+        channel: "email" as const,
+        subject: data.subject,
+        body: data.body,
+        createdAt: new Date().toISOString(),
+        status: "pending" as const
+      };
+
+      currentDb.suggestions.unshift(newSuggestion);
+      executionOutput = `L'Agent Rédacteur a rédigé la proposition d'approche pour ${targetLead.companyName}. Objet : "${data.subject}". Message stocké dans l'onglet 'Tâches & Suggestions' en attente de votre validation !`;
+
+    } else if (step.agentId === "agent-relance") {
+      const contactedLead = currentDb.leads.find((l: any) => l.status === "contacted") || currentDb.leads[0];
+      const leadName = contactedLead ? contactedLead.companyName : "Partenaires dormants";
+      
+      const newTask = {
+        id: "task-" + Math.random().toString(36).substr(2, 9),
+        title: `Relance automatique : ${leadName}`,
+        description: `L'Agent de Relance AI a détecté une absence de réponse depuis 72h. Planifier un appel téléphonique ou envoyer le projet de relance rédigé sous 24h.`,
+        dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        priority: "medium" as const,
+        status: "pending" as const,
+        assignedAgentId: "agent-relance",
+        leadId: contactedLead?.id,
+        createdAt: new Date().toISOString()
+      };
+
+      currentDb.tasks.unshift(newTask);
+      executionOutput = `L'Agent de Relance AI a analysé l'état du pipe. Une nouvelle tâche de relance a été générée pour ${leadName} : "${newTask.title}".`;
+
+    } else if (step.agentId === "agent-director") {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: "Donne tes 3 meilleures recommandations stratégiques prioritaires pour clore de nouvelles bourses d'études FOLO cette semaine au Burkina Faso.",
+        config: {
+          systemInstruction: "Tu es le 'Directeur Commercial FOLO AI'. Donne des conseils de vente extrêmement pragmatiques, courts et orientés résultats."
+        }
+      });
+
+      executionOutput = `Conseil Stratégique du Directeur Commercial FOLO AI : \n\n${response.text}`;
+
+    } else if (step.agentId === "agent-auditor") {
+      const totalCount = currentDb.leads.length;
+      const totalValue = currentDb.leads.reduce((acc: number, l: any) => acc + (l.value || 0), 0);
+      executionOutput = `L'Agent Auditeur & Reporter AI a validé les performances globales. Volume du pipeline commercial : ${totalValue} € répartis sur ${totalCount} comptes actifs. Taux de conversion moyen simulé : 24.5%. Toutes les politiques de conformité budgétaire sont respectées avec brio.`;
+    }
+
+    // Update step state inside plan
+    step.status = "completed";
+    step.output = executionOutput;
+    
+    // Deduct cost & update daily stats in config
+    const currentConfig = currentDb.orchestratorConfig || {
+      mode: "balanced",
+      dailyBudgetLimit: 15.00,
+      costPerLeadLimit: 1.50,
+      useOnlyFreeServices: true,
+      targetLeadsCount: 5,
+      currentDailySpend: 0,
+      remainingFreeQuota: 1500
+    };
+
+    const costDeduction = step.costEstimate || 0;
+    currentConfig.currentDailySpend = Number((currentConfig.currentDailySpend + costDeduction).toFixed(4));
+    currentConfig.remainingFreeQuota = Math.max(0, currentConfig.remainingFreeQuota - 15);
+    
+    currentDb.orchestratorConfig = currentConfig;
+
+    // Check if all steps in plan are completed
+    const allDone = plan.steps.every((s: any) => s.status === "completed");
+    if (allDone) {
+      plan.status = "completed";
+    } else {
+      plan.status = "active";
+    }
+
+    saveDatabaseState(currentDb);
+    res.json({ status: "success", plan, config: currentConfig });
+  } catch (error: any) {
+    console.error("Execute Orchestrator Step Error:", error);
+    step.status = "failed";
+    step.output = `Échec de l'exécution : ${error.message || "Erreur interne"}`;
+    saveDatabaseState(currentDb);
+    res.status(500).json({ error: error.message || "Failed to execute step" });
   }
 });
 

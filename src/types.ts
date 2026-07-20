@@ -120,6 +120,7 @@ export interface VeilleAlert {
   impactOnFolo: string;
   url?: string;
   createdAt: string;
+  suggestedAction?: string;
 }
 
 export interface CRMStats {
@@ -130,3 +131,45 @@ export interface CRMStats {
   qualifiedPercentage: number;
   stageDistribution: { [key in LeadStatus]: number };
 }
+
+export interface OrchestratorPolicy {
+  humanValidationRequired: boolean;
+  runFrequency: "manual" | "daily" | "weekly";
+  retryStrategy: "none" | "standard" | "aggressive";
+  approvedSources: string[];
+}
+
+export interface OrchestratorConfig {
+  mode: "economy" | "balanced" | "performance" | "custom";
+  dailyBudgetLimit: number;
+  costPerLeadLimit: number;
+  useOnlyFreeServices: boolean;
+  targetLeadsCount: number;
+  currentDailySpend: number;
+  remainingFreeQuota: number;
+  policies: OrchestratorPolicy;
+}
+
+export interface OrchestratorPlanStep {
+  agentId: string;
+  agentName: string;
+  action: string;
+  status: "pending" | "running" | "completed" | "failed";
+  costEstimate: number;
+  output?: string;
+}
+
+export interface OrchestratorPlan {
+  id: string;
+  goalDescription: string;
+  budgetAssessment: {
+    estimatedCost: number;
+    isFeasible: boolean;
+    reasoning: string;
+    quotaImpact: number;
+  };
+  steps: OrchestratorPlanStep[];
+  createdAt: string;
+  status: "draft" | "active" | "completed" | "failed";
+}
+

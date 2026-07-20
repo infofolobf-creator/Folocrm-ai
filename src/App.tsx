@@ -17,9 +17,11 @@ import { CampaignsView } from "./components/CampaignsView";
 import { TasksView } from "./components/TasksView";
 import { AgentsView } from "./components/AgentsView";
 import { ReportingView } from "./components/ReportingView";
-import { LayoutDashboard, Users, Target, Volume2, CheckSquare, Brain, FileText, Menu, X, HelpCircle, Loader2 } from "lucide-react";
+import { OpportunitiesView } from "./components/OpportunitiesView";
+import { OrchestratorView } from "./components/OrchestratorView";
+import { LayoutDashboard, Users, Target, Volume2, CheckSquare, Brain, FileText, Menu, X, HelpCircle, Loader2, Compass, Cpu } from "lucide-react";
 
-type CRMTab = "dashboard" | "leads" | "pipeline" | "campaigns" | "tasks" | "agents" | "reporting";
+type CRMTab = "dashboard" | "leads" | "pipeline" | "campaigns" | "tasks" | "agents" | "reporting" | "opportunities" | "orchestrator";
 
 function MainAppLayout() {
   const { isLoading, error } = useCRM();
@@ -30,7 +32,9 @@ function MainAppLayout() {
   const renderActiveView = () => {
     switch (activeTab) {
       case "dashboard":
-        return <DashboardView />;
+        return <DashboardView onNavigateToOpportunities={() => setActiveTab("opportunities")} />;
+      case "opportunities":
+        return <OpportunitiesView />;
       case "leads":
         return <LeadsView />;
       case "pipeline":
@@ -43,6 +47,8 @@ function MainAppLayout() {
         return <AgentsView />;
       case "reporting":
         return <ReportingView />;
+      case "orchestrator":
+        return <OrchestratorView />;
       default:
         return <DashboardView />;
     }
@@ -50,6 +56,8 @@ function MainAppLayout() {
 
   const navItems = [
     { id: "dashboard", label: "Tableau de Bord", icon: LayoutDashboard },
+    { id: "orchestrator", label: "Orchestrateur & Budgets", icon: Cpu },
+    { id: "opportunities", label: "Opportunités détectées", icon: Compass },
     { id: "leads", label: "Prospects & Partenaires", icon: Users },
     { id: "pipeline", label: "Tunnel Commercial (Kanban)", icon: Target },
     { id: "campaigns", label: "Campagnes & Landing", icon: Volume2 },
