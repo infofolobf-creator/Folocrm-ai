@@ -175,3 +175,34 @@ export interface OrchestratorPlan {
   status: "draft" | "active" | "completed" | "failed";
 }
 
+export interface KnowledgeVersion {
+  version: number;
+  content: string;
+  updatedAt: string;
+  author?: string;
+}
+
+export interface KnowledgeItem {
+  id: string;
+  title: string;
+  category: string; // e.g. "Présentation FOLO", "Offres & Expertise", "Partenaires & Experts", "Légal & Tarifs", "Veille & Décisions"
+  subcategory: string; // e.g. "Vision, mission, valeurs", "Services et offres", "CV", "FAQ", etc.
+  type: "document" | "link" | "note";
+  content: string;
+  sourceUrl?: string;
+  fileName?: string;
+  fileType?: string; // e.g. "pdf", "docx", "xlsx", "pptx"
+  version: number;
+  updatedAt: string;
+  author: string;
+  versions: KnowledgeVersion[];
+}
+
+export interface RagQueryResult {
+  answer: string;
+  confidenceScore: number; // 0-100 index of base knowledge integration
+  knowledgeSource: "folo_internal" | "gemini_general" | "hybrid";
+  sourcesUsed: { id: string; title: string; category: string; subcategory: string }[];
+}
+
+

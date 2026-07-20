@@ -54,6 +54,16 @@ export const OrchestratorView: React.FC = () => {
   const [isSavingPolicies, setIsSavingPolicies] = useState(false);
   const [isLearning, setIsLearning] = useState(false);
 
+  // Sync state with loaded configuration from database
+  React.useEffect(() => {
+    if (orchestratorConfig?.policies) {
+      setHumanValidationRequired(orchestratorConfig.policies.humanValidationRequired ?? true);
+      setRunFrequency(orchestratorConfig.policies.runFrequency ?? "manual");
+      setRetryStrategy(orchestratorConfig.policies.retryStrategy ?? "standard");
+      setApprovedSources(orchestratorConfig.policies.approvedSources ?? ["public_web", "tenders_bf", "linkedin"]);
+    }
+  }, [orchestratorConfig]);
+
   if (!orchestratorConfig) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -177,7 +187,7 @@ export const OrchestratorView: React.FC = () => {
           </span>
           <div className="space-y-0.5">
             <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Dépenses Jour</span>
-            <span className="block text-lg font-extrabold text-slate-800">{orchestratorConfig.currentDailySpend.toFixed(4)} $</span>
+            <span className="block text-lg font-extrabold text-slate-800">{(orchestratorConfig.currentDailySpend ?? 0).toFixed(4)} $</span>
           </div>
         </div>
 
@@ -188,7 +198,7 @@ export const OrchestratorView: React.FC = () => {
           </span>
           <div className="space-y-0.5">
             <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Limite Budget</span>
-            <span className="block text-lg font-extrabold text-slate-800">{orchestratorConfig.dailyBudgetLimit.toFixed(2)} $ / jour</span>
+            <span className="block text-lg font-extrabold text-slate-800">{(orchestratorConfig.dailyBudgetLimit ?? 0).toFixed(2)} $ / jour</span>
           </div>
         </div>
 
@@ -386,16 +396,16 @@ export const OrchestratorView: React.FC = () => {
                     <span>Audit de Faisabilité de l'Orchestrateur</span>
                   </div>
                   <span className="text-[10px] text-slate-500 font-semibold bg-white/80 border border-slate-100 px-2 py-0.5 rounded-md">
-                    Impact estimé : -{currentPlan.budgetAssessment.quotaImpact} requêtes API
+                    Impact estimé : -{currentPlan.budgetAssessment?.quotaImpact ?? 0} requêtes API
                   </span>
                 </div>
                 <p className="text-slate-600 leading-relaxed font-medium">
-                  {currentPlan.budgetAssessment.reasoning}
+                  {currentPlan.budgetAssessment?.reasoning ?? "Aucun détail d'audit disponible."}
                 </p>
                 <div className="pt-1.5 flex items-center gap-3 text-[11px] font-bold text-indigo-950">
-                  <span>Coût prévisionnel : {currentPlan.budgetAssessment.estimatedCost.toFixed(2)} $</span>
+                  <span>Coût prévisionnel : {(currentPlan.budgetAssessment?.estimatedCost ?? 0).toFixed(2)} $</span>
                   <span>•</span>
-                  <span className="text-emerald-700">Faisable : {currentPlan.budgetAssessment.isFeasible ? "Oui (Respecte les quotas)" : "Non (Quotas insuffisants)"}</span>
+                  <span className="text-emerald-700">Faisable : {currentPlan.budgetAssessment?.isFeasible ? "Oui (Respecte les quotas)" : "Non (Quotas insuffisants)"}</span>
                 </div>
               </div>
 
@@ -436,7 +446,7 @@ export const OrchestratorView: React.FC = () => {
                               <span className="p-1 bg-slate-100 rounded text-sm">{avatar}</span>
                               <span className="font-bold text-slate-800">{step.agentName}</span>
                               <span className="text-[9px] font-bold text-slate-400 px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded">
-                                Coût : {step.costEstimate.toFixed(3)} $
+                                Coût : {(step.costEstimate ?? 0).toFixed(3)} $
                               </span>
                             </div>
 

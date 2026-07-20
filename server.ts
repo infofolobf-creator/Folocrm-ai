@@ -300,6 +300,100 @@ const initialDatabase = {
       createdAt: new Date().toISOString(),
       status: "pending"
     }
+  ],
+  knowledge: [
+    {
+      id: "k-1",
+      title: "Mission, Vision et Valeurs de FOLO",
+      category: "Présentation FOLO",
+      subcategory: "Vision, mission et valeurs",
+      type: "note",
+      content: "Le Programme FOLO (Formation, Orientation, Insertion et Opportunités) est une initiative stratégique majeure au Burkina Faso pour lutter contre le sous-emploi des jeunes au Sahel.\n\nVision : Devenir l'écosystème de référence pour la formation d'excellence pratique et l'insertion durable de la jeunesse sahélienne dans les métiers d'avenir.\n\nMission : Former 500+ jeunes par an et les insérer à 95% sous 6 mois.\n\nValeurs :\n- Excellence technique : Formation pratique rigoureuse alignée sur les standards internationaux.\n- Inclusivité sociale : Au moins 40% de bourses attribuées à de jeunes femmes et aux déplacés internes.\n- Impact Local : Réponses technologiques concrètes aux défis burkinabè (énergie solaire, agroécologie, applications mobiles de services).",
+      version: 1,
+      updatedAt: "2026-07-20T10:00:00.000Z",
+      author: "Prof. Adama Sawadogo",
+      versions: []
+    },
+    {
+      id: "k-2",
+      title: "Filières et Offres de Formation",
+      category: "Présentation FOLO",
+      subcategory: "Services et offres",
+      type: "document",
+      content: "Le programme FOLO s'organise autour de trois grandes filières de formation professionnalisantes :\n\n1. Technologies du Numérique (Bootcamp de 6 mois) :\n- Développement Web Full Stack (React, Node.js, PostgreSQL, TypeScript).\n- Développement Mobile (React Native) et architectures Cloud.\n- Méthodes agiles, Git, et intégration continue.\n\n2. Énergies Renouvelables & Systèmes Solaires Off-Grid (4 mois) :\n- Installation et maintenance de kits solaires résidentiels et productifs.\n- Dimensionnement de mini-réseaux et pompage solaire agricole.\n- Économie d'énergie et certifications professionnelles.\n\n3. Agroécologie de Précision & Technologies Agricoles (4 mois) :\n- Pratiques culturales durables (agroforesterie, compostage, gestion de l'eau).\n- Utilisation de capteurs IoT pour le pilotage de l'irrigation.\n- Gestion des coopératives agricoles et commercialisation numérique.",
+      fileName: "folo_plaquette_formation_2026.pdf",
+      fileType: "pdf",
+      version: 1,
+      updatedAt: "2026-07-20T10:00:00.000Z",
+      author: "Direction Pédagogique FOLO",
+      versions: []
+    },
+    {
+      id: "k-3",
+      title: "Grille Tarifaire et Offres de Sponsoring RSE",
+      category: "Légal & Tarifs",
+      subcategory: "Tarifs",
+      type: "document",
+      content: "Grille tarifaire et options de partenariats commerciaux de FOLO CRM AI pour l'année 2026 :\n\n1. Formule 'Sponsor de Cohorte' (RSE d'Entreprise) - 12 500 € par cohorte :\n- Financement complet des bourses de 25 étudiants.\n- Co-branding de la promotion (ex: 'Promotion Sinuhe Énergie').\n- Accès prioritaire exclusif aux CVs et recrutement direct sans frais supplémentaires.\n- Rapports trimestriels de performance académique et d'impact social.\n\n2. Formule 'Bourse Individuelle' - 1 500 € par étudiant :\n- Financement de la scolarité et du kit d'apprentissage (ordinateur portable ou outillage solaire).\n- Rapport d'évaluation personnalisé de l'étudiant parrainé.\n\n3. Option 'Partenaire Recruteur Standard' - Gratuit :\n- Convention de stage de fin d'études standard (3 mois minimum).\n- Engagement à verser une indemnité minimale de stage (50 000 FCFA / mois au Burkina Faso).",
+      fileName: "grille_tarifs_folo_2026.xlsx",
+      fileType: "xlsx",
+      version: 1,
+      updatedAt: "2026-07-20T10:00:00.000Z",
+      author: "Direction Commerciale",
+      versions: []
+    },
+    {
+      id: "k-4",
+      title: "Étude de cas : Partenariat FOLO & Sinuhe Énergie",
+      category: "Références Clients",
+      subcategory: "Études de cas",
+      type: "note",
+      content: "Contexte : Sinuhe Énergie, leader des installations solaires off-grid à Bobo-Dioulasso, faisait face à une pénurie d'installateurs techniques qualifiés, en particulier de profils féminins.\n\nSolution : Sinuhe Énergie a sponsorisé une cohorte complète de 25 jeunes filles (cohorte 'Femmes Solaires 2025') pour un montant global de 12 500 €.\n\nRésultats :\n- 25 jeunes filles formées intensivement au dimensionnement, câblage et pompage solaire.\n- 24 diplômées recrutées directement par Sinuhe Énergie en CDI/CDD (96% de taux d'insertion directe).\n- Amélioration de 35% de la satisfaction client sur les installations solaires rurales de Sinuhe Énergie grâce à la rigueur de l'équipe féminine.",
+      version: 1,
+      updatedAt: "2026-07-20T10:00:00.000Z",
+      author: "Directeur Commercial FOLO",
+      versions: []
+    },
+    {
+      id: "k-5",
+      title: "FAQ Générale FOLO pour les Partenaires",
+      category: "Légal & Tarifs",
+      subcategory: "FAQ",
+      type: "note",
+      content: "Q : Comment sont sélectionnés les jeunes du programme FOLO ?\nR : Les candidats passent un processus rigoureux en 3 étapes : un test en ligne de logique/motivation, un entretien de personnalité en présentiel et un mini-projet de 48h. Nous priorisons les profils méritants issus de zones défavorisées.\n\nQ : La formation est-elle certifiée par l'État burkinabè ?\nR : Oui, FOLO travaille en étroite collaboration avec le Ministère de la Jeunesse et de l'Emploi pour délivrer des Certificats de Qualification Professionnelle (CQP).\n\nQ : Quelles sont les modalités de paiement pour les sponsors RSE ?\nR : Le règlement s'effectue en deux tranches : 50% au lancement de la cohorte sponsorisée et 50% à la fin du tronc commun de formation (3ème mois).\n\nQ : Un consultant externe peut-il enseigner au sein de FOLO ?\nR : Absolument, notre réseau d'experts intervient régulièrement sous forme de masterclass professionnelles.",
+      version: 1,
+      updatedAt: "2026-07-20T10:00:00.000Z",
+      author: "FAQ Manager FOLO",
+      versions: []
+    },
+    {
+      id: "k-6",
+      title: "CV de Prof. Adama Sawadogo - Directeur Scientifique",
+      category: "Partenaires & Experts",
+      subcategory: "CV",
+      type: "document",
+      content: "Professeur Adama Sawadogo, Ph.D. en Intelligence Artificielle et Systèmes Distribués.\n\nExpérience : 20+ ans de recherche et de conseil en technologies numériques en Europe et en Afrique subsaharienne. Ancien conseiller technique auprès du Ministère de l'Économie Numérique du Burkina Faso.\n\nExpertise : IA cognitive, architectures multi-agents, et adaptation technologique en milieu saharien. Fondateur et directeur scientifique émérite de l'écosystème FOLO.\n\nPublications : Auteur de 30+ articles scientifiques sur l'autonomisation technologique des jeunes par l'apprentissage machine et l'IoT agricole.",
+      fileName: "cv_adama_sawadogo.pdf",
+      fileType: "pdf",
+      version: 1,
+      updatedAt: "2026-07-20T10:00:00.000Z",
+      author: "Adama Sawadogo",
+      versions: []
+    },
+    {
+      id: "k-7",
+      title: "Modèle de Proposition Commerciale standard",
+      category: "Références Clients",
+      subcategory: "Modèles de propositions",
+      type: "document",
+      content: "Document cadre pour soumettre des propositions de partenariat RSE à de grandes entreprises locales :\n\n- Titre : Proposition de Partenariat Stratégique RSE : Bourses d'Insertion FOLO.\n- Introduction : Présenter FOLO comme levier d'action sociale concret contre le chômage des jeunes burkinabè.\n- Corps de proposition : Détailler l'impact du parrainage d'une cohorte (visibilité de la marque, réduction d'impôts RSE éventuelle, accès à des talents immédiatement opérationnels).\n- Investissement : Préciser le coût global fixe de 12 500 € pour 25 étudiants.\n- Clôture : Appel à l'action pour planifier un rendez-vous avec le Directeur Commercial.",
+      fileName: "modele_proposition_folo_2026.docx",
+      fileType: "docx",
+      version: 1,
+      updatedAt: "2026-07-20T10:00:00.000Z",
+      author: "Direction Commerciale",
+      versions: []
+    }
   ]
 };
 
@@ -330,6 +424,11 @@ function saveDatabaseState(state: any) {
 
 // Global cached state in server memory
 let currentDb = loadDatabaseState();
+
+if (!currentDb.knowledge) {
+  currentDb.knowledge = initialDatabase.knowledge;
+  saveDatabaseState(currentDb);
+}
 
 // Ensure Orchestrator config and default plans exist
 if (!currentDb.orchestratorConfig) {
@@ -413,9 +512,211 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", geminiConfigured: !!process.env.GEMINI_API_KEY });
 });
 
+// --- CERVEAU FOLO: RAG MOTOR & DOCUMENT STORAGE ---
+
+async function performKnowledgeRetrievalAndGrounding(query: string, categoryFilter?: string) {
+  const queryLower = query.toLowerCase();
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
+  
+  // Calculate matching score for each knowledge item
+  const matchedItems = (currentDb.knowledge || []).map((item: any) => {
+    let score = 0;
+    const titleLower = item.title.toLowerCase();
+    const contentLower = item.content.toLowerCase();
+    const catLower = item.category.toLowerCase();
+    const subLower = item.subcategory.toLowerCase();
+    
+    if (categoryFilter && item.category !== categoryFilter) {
+      return { item, score: -1 };
+    }
+    
+    // Check for exact phrases or title matching
+    if (titleLower.includes(queryLower)) score += 30;
+    if (contentLower.includes(queryLower)) score += 12;
+    
+    // Check individual word matches
+    queryWords.forEach((word: string) => {
+      if (titleLower.includes(word)) score += 8;
+      if (contentLower.includes(word)) score += 3;
+      if (catLower.includes(word)) score += 4;
+      if (subLower.includes(word)) score += 4;
+    });
+    
+    return { item, score };
+  })
+  .filter((x: any) => x.score > 0)
+  .sort((a: any, b: any) => b.score - a.score)
+  .slice(0, 3);
+  
+  const sourcesUsed = matchedItems.map((x: any) => ({
+    id: x.item.id,
+    title: x.item.title,
+    category: x.item.category,
+    subcategory: x.item.subcategory
+  }));
+  
+  const hasInternalSources = matchedItems.length > 0;
+  
+  const groundingContext = matchedItems.map((x: any) => {
+    return `[DOCUMENT INTERNE FOLO : ${x.item.title} (Catégorie: ${x.item.category} / ${x.item.subcategory})]
+${x.item.content}`;
+  }).join("\n\n---\n\n");
+
+  const systemInstruction = `Tu es le "Cerveau FOLO" (FOLO Knowledge Hub), la mémoire cognitive et l'intelligence métier centrale du programme FOLO CRM AI au Burkina Faso.
+Ton rôle est de répondre de manière professionnelle, ultra-précise et structurée à la requête de l'utilisateur ou d'un agent IA, en te basant de manière prioritaire absolue et rigoureuse sur les connaissances internes fournies dans le CONTEXTE DE GROUNDING ci-dessous.
+
+Règles critiques :
+1. Si le CONTEXTE contient l'information demandée, formule une réponse riche, polie et contextualisée. Cite les détails du contexte (grille de tarifs, filières de bootcamps, cas clients comme Sinuhe Énergie, etc.).
+2. Si le CONTEXTE ne contient pas d'information pertinente, tu peux compléter intelligemment en utilisant tes connaissances générales de Gemini, mais tu dois clairement l'indiquer et inviter à enrichir le Cerveau FOLO.
+3. Reste d'un ton humble, d'expert et de conseiller stratégique d'affaires.
+
+CONTEXTE DE GROUNDING INTERNE FOLO :
+${hasInternalSources ? groundingContext : "Aucun document trouvé correspondant exactement à la requête dans le référentiel interne."}`;
+
+  try {
+    const ai = getGeminiClient();
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: `Traite la requête suivante en rédigeant une synthèse métier impeccable : "${query}"`,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            answer: { type: Type.STRING, description: "La réponse finale rédigée de manière soignée (en Markdown)." },
+            confidenceScore: { type: Type.INTEGER, description: "Score de confiance (0 à 100) basé sur l'abondance de sources internes correspondantes (ex: 90-100 si parfait, 40-70 si partiel, <30 si Gemini pur)." },
+            knowledgeSource: { type: Type.STRING, enum: ["folo_internal", "gemini_general", "hybrid"], description: "La source de connaissances dominante." }
+          },
+          required: ["answer", "confidenceScore", "knowledgeSource"]
+        }
+      }
+    });
+
+    const data = JSON.parse(response.text.trim());
+    return {
+      answer: data.answer,
+      confidenceScore: data.confidenceScore,
+      knowledgeSource: data.knowledgeSource,
+      sourcesUsed
+    };
+  } catch (error: any) {
+    console.error("RAG Query Error:", error);
+    return {
+      answer: `[Mode dégradé] Recherche par mots-clés effectuée dans le Cerveau FOLO :\n\n` + 
+        (hasInternalSources 
+          ? `Documents correspondants trouvés :\n` + matchedItems.map((x: any) => `* **${x.item.title}** (Catégorie: ${x.item.category}) : ${x.item.content.substring(0, 250)}...`).join("\n")
+          : `Aucune correspondance directe trouvée pour "${query}".`),
+      confidenceScore: hasInternalSources ? 75 : 15,
+      knowledgeSource: hasInternalSources ? "folo_internal" : "gemini_general",
+      sourcesUsed
+    };
+  }
+}
+
+// Fetch all knowledge items
+app.get("/api/knowledge", (req, res) => {
+  res.json(currentDb.knowledge || []);
+});
+
+// Run a RAG query over the knowledge hub
+app.post("/api/knowledge/query", async (req, res) => {
+  const { query, category } = req.body;
+  if (!query) {
+    return res.status(400).json({ error: "La requête (query) est requise." });
+  }
+  const result = await performKnowledgeRetrievalAndGrounding(query, category);
+  res.json(result);
+});
+
+// Add a new knowledge item
+app.post("/api/knowledge", (req, res) => {
+  const { title, category, subcategory, type, content, author, sourceUrl, fileName, fileType } = req.body;
+  if (!title || !category || !subcategory || !content) {
+    return res.status(400).json({ error: "Les champs title, category, subcategory, et content sont requis." });
+  }
+
+  const newItem = {
+    id: "k-" + Math.random().toString(36).substr(2, 9),
+    title,
+    category,
+    subcategory,
+    type: type || "note",
+    content,
+    sourceUrl: sourceUrl || undefined,
+    fileName: fileName || undefined,
+    fileType: fileType || undefined,
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    author: author || "Administrateur FOLO",
+    versions: []
+  };
+
+  if (!currentDb.knowledge) {
+    currentDb.knowledge = [];
+  }
+  currentDb.knowledge.unshift(newItem);
+  saveDatabaseState(currentDb);
+  res.json({ status: "success", item: newItem });
+});
+
+// Edit / Update version of a knowledge item
+app.put("/api/knowledge/:id", (req, res) => {
+  const { id } = req.params;
+  const { title, category, subcategory, type, content, author, sourceUrl, fileName, fileType } = req.body;
+  
+  const itemIndex = currentDb.knowledge?.findIndex((k: any) => k.id === id);
+  if (itemIndex === -1 || itemIndex === undefined) {
+    return res.status(404).json({ error: "Élément de connaissance introuvable." });
+  }
+
+  const existingItem = currentDb.knowledge[itemIndex];
+  
+  // Archive old content into versions array
+  const archiveVersion = {
+    version: existingItem.version,
+    content: existingItem.content,
+    updatedAt: existingItem.updatedAt,
+    author: existingItem.author
+  };
+
+  const updatedItem = {
+    ...existingItem,
+    title: title || existingItem.title,
+    category: category || existingItem.category,
+    subcategory: subcategory || existingItem.subcategory,
+    type: type || existingItem.type,
+    content: content || existingItem.content,
+    sourceUrl: sourceUrl !== undefined ? sourceUrl : existingItem.sourceUrl,
+    fileName: fileName !== undefined ? fileName : existingItem.fileName,
+    fileType: fileType !== undefined ? fileType : existingItem.fileType,
+    version: existingItem.version + 1,
+    updatedAt: new Date().toISOString(),
+    author: author || "Administrateur FOLO",
+    versions: [archiveVersion, ...(existingItem.versions || [])]
+  };
+
+  currentDb.knowledge[itemIndex] = updatedItem;
+  saveDatabaseState(currentDb);
+  res.json({ status: "success", item: updatedItem });
+});
+
+// Delete a knowledge item
+app.delete("/api/knowledge/:id", (req, res) => {
+  const { id } = req.params;
+  const itemIndex = currentDb.knowledge?.findIndex((k: any) => k.id === id);
+  if (itemIndex === -1 || itemIndex === undefined) {
+    return res.status(404).json({ error: "Élément de connaissance introuvable." });
+  }
+
+  currentDb.knowledge.splice(itemIndex, 1);
+  saveDatabaseState(currentDb);
+  res.json({ status: "success" });
+});
+
 // --- AI AGENTS POWERED ENDPOINTS ---
 
-// Agent 1: Qualificateur AI
+// Agent 1: Qualificateur AI (enhanced with RAG grounding)
 app.post("/api/ai/qualify", async (req, res) => {
   const { leadId } = req.body;
   const lead = currentDb.leads.find((l: any) => l.id === leadId);
@@ -427,17 +728,20 @@ app.post("/api/ai/qualify", async (req, res) => {
 
   try {
     const ai = getGeminiClient();
-    const systemPrompt = `Tu es le "Qualificateur AI" du programme de formation FOLO (Formation, Orientation, Insertion et Opportunités).
-Ta mission est d'analyser de manière experte et froide les données d'un nouveau prospect (Lead) et de son entreprise partenaire potentielle afin de l'évaluer de 0 à 100, de lui attribuer un statut (hot, warm, cold) et de proposer un résumé d'analyse rigoureux avec les prochaines actions concrètes.
+    
+    // Perform semantic RAG search in FOLO Brain about corporate rates or qualified criteria
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      `critères de qualification bourses parrainage cohorte tarifs et offres FOLO pour ${company.industry} ${lead.notes}`
+    );
 
-Le programme FOLO forme des jeunes au Burkina Faso et en Afrique de l'Ouest dans des domaines clés : Technologies du Numérique (développement Web, mobile), Énergie Solaire off-grid, et Agroécologie de précision.
-Les entreprises cherchent soit à recruter nos diplômés, soit à parrainer/sponsoriser financièrement des cohortes (RSE/Bourses).
+    const systemPrompt = `Tu es le "Qualificateur AI" du programme de formation FOLO (Formation, Orientation, Insertion et Opportunités).
+Ta mission est d'analyser de manière experte, rigoureuse et froide les données d'un nouveau prospect (Lead) et de son entreprise partenaire afin de l'évaluer de 0 à 100, de lui attribuer un statut (hot, warm, cold) et de proposer un résumé d'analyse basé en priorité absolue sur la grille de tarifs, l'offre RSE de sponsoring et les critères FOLO issus du Cerveau FOLO.
 
 Tu dois impérativement renvoyer ta réponse sous forme de JSON strict respectant exactement le schéma suivant :
 {
   "score": <number de 0 à 100>,
   "status": "hot" | "warm" | "cold",
-  "summary": "<texte synthétique expliquant ton raisonnement en français>",
+  "summary": "<texte synthétique expliquant ton raisonnement en français, en citant les sources FOLO pertinentes>",
   "needsFollowUp": <boolean>,
   "suggestedNextAction": "<prochaine étape commerciale précise>"
 }`;
@@ -455,11 +759,16 @@ Entreprise associée :
 - Secteur : ${company.industry}
 - Taille : ${company.size}
 - Site web : ${company.website || "N/A"}
-- Ville/Adresse : ${company.address}, ${company.country}`;
+- Ville/Adresse : ${company.address}, ${company.country}
+
+[CONNAISSANCES RÉCUPÉRÉES DU CERVEAU FOLO (GROUNDING METIER)]
+- Indice de confiance du Cerveau FOLO : ${kbResult.confidenceScore}% (Type: ${kbResult.knowledgeSource})
+- Sources FOLO utilisées : ${kbResult.sourcesUsed.map(s => s.title).join(", ") || "Aucune source"}
+- Synthèse de Grounding FOLO : ${kbResult.answer}`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
-      contents: `Qualifie ce prospect selon l'analyse : \n\n${leadContext}`,
+      contents: `Qualifie ce prospect selon l'analyse métier structurée : \n\n${leadContext}`,
       config: {
         systemInstruction: systemPrompt,
         responseMimeType: "application/json",
@@ -468,9 +777,9 @@ Entreprise associée :
           properties: {
             score: { type: Type.INTEGER, description: "Score de 0 à 100 sur le potentiel de closing ou sponsoring." },
             status: { type: Type.STRING, enum: ["hot", "warm", "cold"], description: "Température commerciale." },
-            summary: { type: Type.STRING, description: "Une analyse claire en 2-3 phrases sur les motivations du lead." },
+            summary: { type: Type.STRING, description: "Une analyse claire de qualification s'appuyant sur les grilles FOLO." },
             needsFollowUp: { type: Type.BOOLEAN, description: "Si un suivi urgent est requis." },
-            suggestedNextAction: { type: Type.STRING, description: "La meilleure action à faire immédiatement." }
+            suggestedNextAction: { type: Type.STRING, description: "La meilleure action commerciale de suivi." }
           },
           required: ["score", "status", "summary", "needsFollowUp", "suggestedNextAction"]
         }
@@ -497,9 +806,9 @@ Entreprise associée :
   }
 });
 
-// Agent 2: Rédacteur AI (Message suggestion)
+// Agent 2: Rédacteur AI (Message suggestion enhanced with RAG templates)
 app.post("/api/ai/suggest-message", async (req, res) => {
-  const { leadId, channel, goal } = req.body; // channel: email, sms, whatsapp, linkedin
+  const { leadId, channel, goal } = req.body;
   const lead = currentDb.leads.find((l: any) => l.id === leadId);
   if (!lead) {
     return res.status(404).json({ error: "Lead not found" });
@@ -507,9 +816,14 @@ app.post("/api/ai/suggest-message", async (req, res) => {
 
   try {
     const ai = getGeminiClient();
-    const systemPrompt = `Tu es "Rédacteur FOLO AI", un agent de communication commercial exceptionnellement doué, orienté résultats, chaleureux mais extrêmement professionnel. Ton but est de rédiger des messages de prospection ou de suivi percutants, adaptés au canal demandé (email, SMS, WhatsApp, LinkedIn) et répondant à l'objectif commercial fixé.
+    
+    // Retrieve template or FOLO program details from Cerveau FOLO
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      `modèle d'email ou message d'approche FOLO ${channel} pour ${goal || "sponsoring bourses"}`
+    );
 
-Tu dois toujours écrire en Français de manière élégante, courtoise et engageante. Mentionne subtilement l'excellence de la formation FOLO (Formation, Orientation, Insertion et Opportunités) au Burkina Faso.
+    const systemPrompt = `Tu es "Rédacteur FOLO AI", un agent de communication commercial exceptionnellement doué, orienté résultats, chaleureux mais extrêmement professionnel. Ton but est de rédiger des messages de prospection ou de suivi percutants, adaptés au canal demandé (email, SMS, WhatsApp, LinkedIn) et répondant à l'objectif commercial fixé.
+Tu dois t'appuyer fidèlement sur la synthèse et les offres FOLO fournies dans le grounding context pour rédiger un message authentique, sans inventer d'éléments farfelus.
 
 Rassemble ta réponse sous forme de JSON strict comme suit :
 {
@@ -522,11 +836,15 @@ Rassemble ta réponse sous forme de JSON strict comme suit :
 - Entreprise : ${lead.companyName}
 - Notes du prospect : "${lead.notes || ""}"
 - Canal requis : ${channel}
-- Objectif de ce message : ${goal || "Prendre contact et proposer un rendez-vous téléphonique."}`;
+- Objectif de ce message : ${goal || "Prendre contact et proposer un rendez-vous téléphonique."}
+
+[CONNAISSANCES RÉCUPÉRÉES DU CERVEAU FOLO (GROUNDING TEMPLATES & PROGRAMMES)]
+- Sources FOLO utilisées : ${kbResult.sourcesUsed.map(s => s.title).join(", ") || "Aucune source"}
+- Synthèse de Grounding FOLO : ${kbResult.answer}`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
-      contents: `Génère le message avec les paramètres suivants :\n\n${context}`,
+      contents: `Génère le message de prospection ultra-contextualisé :\n\n${context}`,
       config: {
         systemInstruction: systemPrompt,
         responseMimeType: "application/json",
@@ -552,7 +870,7 @@ Rassemble ta réponse sous forme de JSON strict comme suit :
       subject: result.subject || undefined,
       body: result.body,
       createdAt: new Date().toISOString(),
-      status: "pending"
+      status: "pending" as const
     };
 
     currentDb.suggestions.unshift(newSuggestion);
@@ -565,12 +883,19 @@ Rassemble ta réponse sous forme de JSON strict comme suit :
   }
 });
 
-// Agent 3: Veilleur AI (Generate a smart business alert / tender for FOLO program in Burkina Faso)
+// Agent 3: Veilleur AI (Generate a smart business alert grounded on FOLO program domains)
 app.post("/api/ai/veille-alerts", async (req, res) => {
   try {
     const ai = getGeminiClient();
+    
+    // RAG search on target sectors
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      "filières de formation technologies numérique solaire agroécologie et secteurs stratégiques FOLO"
+    );
+
     const systemPrompt = `Tu es le "Veilleur FOLO AI", un agent de veille stratégique et économique focalisé sur l'Afrique de l'Ouest, particulièrement le Burkina Faso. 
-Ta mission est de simuler ou d'extraire (avec ta connaissance du marché) un appel d'offres, une subvention internationale RSE, ou un projet d'une grande entreprise locale qui représente une opportunité commerciale en or pour le Programme FOLO (formation et insertion professionnelle de jeunes développeurs, électriciens solaires et agroécologistes).
+Ta mission est de simuler ou d'extraire (avec ta connaissance du marché) un appel d'offres, une subvention internationale RSE, ou un projet d'une grande entreprise locale qui représente une opportunité commerciale en or pour le Programme FOLO (formation et insertion professionnelle de jeunes développeurs, installateurs solaires et agroécologistes).
+Tu dois te baser sur les filières et domaines d'expertise FOLO officiels décrits dans le grounding context pour assurer un alignement parfait.
 
 Le livrable doit être un objet JSON strict :
 {
@@ -585,7 +910,7 @@ Le livrable doit être un objet JSON strict :
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
-      contents: "Génère une alerte de veille d'opportunité commerciale d'actualité pour FOLO en Afrique de l'Ouest.",
+      contents: `Génère une alerte d'opportunité sectorielle en cohérence avec FOLO :\n\nConnaissances FOLO :\n${kbResult.answer}`,
       config: {
         systemInstruction: systemPrompt,
         responseMimeType: "application/json",
@@ -622,14 +947,21 @@ Le livrable doit être un objet JSON strict :
   }
 });
 
-// Agent 4: Directeur Commercial (Sales Strategy / Advice)
+// Agent 4: Directeur Commercial (Sales Strategy / Advice grounded on case studies & experts)
 app.post("/api/ai/sales-advice", async (req, res) => {
   const { leadId, query } = req.body;
   const lead = currentDb.leads.find((l: any) => l.id === leadId);
 
   try {
     const ai = getGeminiClient();
+    
+    // Retrieve case studies or expert CV profiles (e.g. Adama Sawadogo, Sinuhe case study) from Cerveau FOLO
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      `conseils de négociation études de cas Sinuhe grille tarifs partenaires FOLO ${lead ? lead.notes : ""}`
+    );
+
     const systemPrompt = `Tu es le "Directeur Commercial FOLO AI". Tu es un négociateur hors pair, ultra-expérimenté dans le B2B et les partenariats RSE en Afrique de l'Ouest. Tu agis comme un mentor commercial pour l'utilisateur.
+Utilise en priorité les cas réels de réussite et d'offres décrits dans le grounding context pour illustrer tes conseils stratégiques d'affaires.
 
 Donne des conseils avisés, ultra-pragmatiques et stratégiques en français pour remporter ce deal ou optimiser le pipe.
 Sois direct, encourageant et structure tes conseils (Plan d'attaque, Argument de négociation, Points de vigilance).`;
@@ -639,8 +971,14 @@ Sois direct, encourageant et structure tes conseils (Plan d'attaque, Argument de
 - Statut : ${lead.status}
 - Valeur estimée : ${lead.value} €
 - Notes de l'échange : "${lead.notes || ""}"
-- Question de l'utilisateur : "${query || "Comment clore ou faire avancer ce deal rapidement ?"}"`
-      : `Question générale sur le pipe de vente FOLO : "${query || "Donne-moi tes meilleures astuces commerciales pour recruter des sponsors RSE."}"`;
+- Question de l'utilisateur : "${query || "Comment clore ou faire avancer ce deal rapidement ?"}"
+
+[RÉFÉRENCES COGNITIVES DU CERVEAU FOLO]
+${kbResult.answer}`
+      : `Question générale sur le pipe de vente FOLO : "${query || "Donne-moi tes meilleures astuces commerciales pour recruter des sponsors RSE."}"
+
+[RÉFÉRENCES COGNITIVES DU CERVEAU FOLO]
+${kbResult.answer}`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
@@ -657,11 +995,16 @@ Sois direct, encourageant et structure tes conseils (Plan d'attaque, Argument de
   }
 });
 
-// Agent 5: Auditeur & Reporter AI (Global Reporting & Business Analysis)
+// Agent 5: Auditeur & Reporter AI (Global Reporting & Business Analysis grounded on values & vision)
 app.post("/api/ai/report", async (req, res) => {
   try {
     const ai = getGeminiClient();
+    
+    // Retrieve FOLO general presentation, cohorte goals
+    const kbResult = await performKnowledgeRetrievalAndGrounding("mission vision objectifs cohorte et programmes d'excellence FOLO");
+
     const systemPrompt = `Tu es "l'Auditeur Commercial FOLO AI". Ta spécialité est d'analyser les performances brutes du CRM, d'auditer l'état des négociations, d'estimer les prévisions de revenus d'insertion du programme FOLO et de dresser un rapport de synthèse de haut niveau en français.
+Incorpore l'état d'alignement du programme FOLO (ex: bourses, jeunes filles, etc.) par rapport à la vision et les valeurs issues de l'apprentissage métier décrit dans le grounding context.
 
 Rédige un rapport commercial sous forme de Markdown propre et aéré. Inclus :
 1. Une synthèse globale de l'état d'avancement du programme.
@@ -679,11 +1022,14 @@ Rédige un rapport commercial sous forme de Markdown propre et aéré. Inclus :
   - En Négociation : ${currentDb.leads.filter((l: any) => l.status === "negotiation").length}
   - Gagnés : ${currentDb.leads.filter((l: any) => l.status === "won").length}
   - Perdus : ${currentDb.leads.filter((l: any) => l.status === "lost").length}
-- Alertes de veille actives : ${currentDb.alerts.length}`;
+- Alertes de veille actives : ${currentDb.alerts.length}
+
+[CONSTATS D'ALIGNEMENT METIER DU CERVEAU FOLO]
+${kbResult.answer}`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
-      contents: `Génère le rapport d'audit d'après les données :\n\n${statsContext}`,
+      contents: `Génère le rapport d'audit d'après les données et alignement de marque :\n\n${statsContext}`,
       config: {
         systemInstruction: systemPrompt
       }
@@ -800,6 +1146,11 @@ app.post("/api/ai/orchestrator/build-plan", async (req, res) => {
   try {
     const ai = getGeminiClient();
     const metrics = calculateCrmMetrics(currentDb);
+
+    // Perform semantic retrieval on FOLO Brain for the Orchestrator planning goal
+    const kbResult = await performKnowledgeRetrievalAndGrounding(
+      `stratégie commerciale opportunités bourses sponsoring RSE cohorte programmes de formation ${goalDescription}`
+    );
     
     const systemPrompt = `Tu es "Orchestrateur FOLO AI", l'IA supérieure de pilotage de FOLO CRM AI (focalisé sur l'Afrique de l'Ouest et l'employabilité des jeunes au Sahel).
 Ta mission est de concevoir un plan d'action d'agents multi-étapes structuré, réaliste et financièrement cadré pour atteindre l'objectif fixé par l'utilisateur.
@@ -809,6 +1160,13 @@ ${JSON.stringify(metrics, null, 2)}
 
 Si un canal (ex: LinkedIn ou Email) a un taux de réponse historiquement supérieur dans les métriques ci-dessus, priorise-le dans les actions de rédaction/campagne.
 Si un secteur d'activité (ex: "Énergies Renouvelables" ou "Technologies & Logiciels") montre une meilleure moyenne de qualification, suggère d'orienter la recherche d'opportunités de veille vers ce secteur.
+
+[CONNAISSANCES METIER RECUPEREES DU CERVEAU FOLO (GROUNDING STRATEGIQUE)]
+- Indice de confiance : ${kbResult.confidenceScore}% (Type: ${kbResult.knowledgeSource})
+- Sources exploitées : ${kbResult.sourcesUsed.map(s => s.title).join(", ") || "Aucune source correspondante dans le Cerveau FOLO"}
+- Synthèse de Grounding : ${kbResult.answer}
+
+Règle stratégique impérative : Tu dois façonner les étapes d'action de tes agents et ton évaluation de faisabilité en totale symbiose avec le contexte de l'organisation fourni ci-dessus. Par exemple, si l'objectif mentionne le parrainage ou la recherche de budgets, fais explicitement référence aux filières de formation FOLO, à notre formule "Sponsor de Cohorte" à 12 500 € ou "Bourse Individuelle" à 1 500 €, ou à nos études de cas de réussite (comme le partenariat Sinuhe Énergie).
 
 Objectif de l'utilisateur : "${goalDescription || "Trouver et qualifier de nouveaux partenaires"}"
 Nombre de prospects cibles : ${targetLeadsCount || 5}
@@ -835,7 +1193,7 @@ Renvoie un objet JSON strict correspondant exactement à cette structure :
   "budgetAssessment": {
     "estimatedCost": <number, coût estimé global en USD>,
     "isFeasible": <boolean, si l'objectif est faisable sous les contraintes>,
-    "reasoning": "<texte court en français expliquant l'arbitrage financier, la conformité aux politiques, et en quoi les performances de campagnes précédentes ont guidé ce plan>",
+    "reasoning": "<texte court en français expliquant l'arbitrage financier, la conformité aux politiques, et en quoi les performances de campagnes précédentes et les connaissances du Cerveau FOLO ont guidé ce plan>",
     "quotaImpact": <number, quota d'appels ou de tokens estimé>
   },
   "steps": [

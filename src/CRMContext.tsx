@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Lead, Company, Task, Campaign, LandingPage, VeilleAlert, MessageSuggestion, LeadStatus, OrchestratorConfig, OrchestratorPlan } from "./types";
+import { Lead, Company, Task, Campaign, LandingPage, VeilleAlert, MessageSuggestion, LeadStatus, OrchestratorConfig, OrchestratorPlan, KnowledgeItem, RagQueryResult } from "./types";
 
 interface CRMContextType {
   leads: Lead[];
@@ -16,6 +16,7 @@ interface CRMContextType {
   suggestions: MessageSuggestion[];
   orchestratorConfig: OrchestratorConfig | null;
   orchestratorPlans: OrchestratorPlan[];
+  knowledge: KnowledgeItem[];
   isLoading: boolean;
   error: string | null;
   refreshDb: () => Promise<void>;
@@ -36,6 +37,10 @@ interface CRMContextType {
   buildOrchestratorPlanAI: (params: { goalDescription: string; targetLeadsCount: number; maxBudget: number; useOnlyFree: boolean; mode: string }) => Promise<void>;
   executeOrchestratorStepAI: (planId: string, stepIndex: number) => Promise<void>;
   triggerOrchestratorLearning: () => Promise<void>;
+  addKnowledgeItem: (item: Omit<KnowledgeItem, "id" | "updatedAt" | "version" | "versions">) => Promise<void>;
+  updateKnowledgeItem: (id: string, item: Omit<KnowledgeItem, "id" | "updatedAt" | "version" | "versions">) => Promise<void>;
+  deleteKnowledgeItem: (id: string) => Promise<void>;
+  queryKnowledgeBase: (query: string, category?: string) => Promise<RagQueryResult>;
 }
 
 const CRMContext = createContext<CRMContextType | undefined>(undefined);
@@ -379,6 +384,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [suggestions, setSuggestions] = useState<MessageSuggestion[]>([]);
   const [orchestratorConfig, setOrchestratorConfig] = useState<OrchestratorConfig | null>(null);
   const [orchestratorPlans, setOrchestratorPlans] = useState<OrchestratorPlan[]>([]);
+  const [knowledge, setKnowledge] = useState<KnowledgeItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -398,6 +404,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const parsedSuggestions = data.suggestions || [];
       const parsedOrchestratorConfig = data.orchestratorConfig || DEFAULT_OFFLINE_DB.orchestratorConfig;
       const parsedOrchestratorPlans = data.orchestratorPlans || DEFAULT_OFFLINE_DB.orchestratorPlans;
+      const parsedKnowledge = data.knowledge || [];
 
       setLeads(parsedLeads);
       setCompanies(parsedCompanies);
@@ -408,6 +415,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSuggestions(parsedSuggestions);
       setOrchestratorConfig(parsedOrchestratorConfig);
       setOrchestratorPlans(parsedOrchestratorPlans);
+      setKnowledge(parsedKnowledge);
 
       // Cache healthy response to localStorage
       try {
@@ -420,7 +428,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           alerts: parsedAlerts,
           suggestions: parsedSuggestions,
           orchestratorConfig: parsedOrchestratorConfig,
-          orchestratorPlans: parsedOrchestratorPlans
+          orchestratorPlans: parsedOrchestratorPlans,
+          knowledge: parsedKnowledge
         }));
       } catch (e) {
         console.error("Failed to cache database state:", e);
@@ -442,6 +451,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setSuggestions(cached.suggestions || []);
           setOrchestratorConfig(cached.orchestratorConfig || DEFAULT_OFFLINE_DB.orchestratorConfig);
           setOrchestratorPlans(cached.orchestratorPlans || DEFAULT_OFFLINE_DB.orchestratorPlans);
+          setKnowledge(cached.knowledge || []);
         } else {
           // No cache found, initialize with beautiful fallback data
           setLeads(DEFAULT_OFFLINE_DB.leads);
@@ -453,8 +463,12 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setSuggestions(DEFAULT_OFFLINE_DB.suggestions);
           setOrchestratorConfig(DEFAULT_OFFLINE_DB.orchestratorConfig);
           setOrchestratorPlans(DEFAULT_OFFLINE_DB.orchestratorPlans);
+          setKnowledge([]);
           
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_OFFLINE_DB));
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+            ...DEFAULT_OFFLINE_DB,
+            knowledge: []
+          }));
         }
         setError(null);
       } catch (fallbackErr) {
@@ -502,7 +516,8 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       alerts: nextAlerts,
       suggestions: nextSuggestions,
       orchestratorConfig: nextOrchestratorConfig,
-      orchestratorPlans: nextOrchestratorPlans
+      orchestratorPlans: nextOrchestratorPlans,
+      knowledge: updatedState.knowledge !== undefined ? updatedState.knowledge : knowledge
     };
 
     // Save to LocalStorage
@@ -531,6 +546,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setSuggestions(data.data.suggestions || nextSuggestions);
           setOrchestratorConfig(data.data.orchestratorConfig || nextOrchestratorConfig);
           setOrchestratorPlans(data.data.orchestratorPlans || nextOrchestratorPlans);
+          setKnowledge(data.data.knowledge || knowledge);
           
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data.data));
         }
@@ -1016,6 +1032,120 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const addKnowledgeItem = async (itemData: Omit<KnowledgeItem, "id" | "updatedAt" | "version" | "versions">) => {
+    try {
+      const res = await fetch("/api/knowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemData)
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to add knowledge item.");
+      }
+      await refreshDb();
+    } catch (err) {
+      console.warn("Server add knowledge skipped/failed, simulating locally...", err);
+      const newItem: KnowledgeItem = {
+        ...itemData,
+        id: "k-" + Math.random().toString(36).substr(2, 9),
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        versions: []
+      };
+      const updatedKnowledge = [newItem, ...knowledge];
+      setKnowledge(updatedKnowledge);
+      await saveDb({ knowledge: updatedKnowledge });
+    }
+  };
+
+  const updateKnowledgeItem = async (id: string, itemData: Omit<KnowledgeItem, "id" | "updatedAt" | "version" | "versions">) => {
+    try {
+      const res = await fetch(`/api/knowledge/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemData)
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to update knowledge item.");
+      }
+      await refreshDb();
+    } catch (err) {
+      console.warn("Server update knowledge skipped/failed, simulating locally...", err);
+      const existing = knowledge.find(k => k.id === id);
+      if (!existing) return;
+
+      const archiveVersion = {
+        version: existing.version,
+        content: existing.content,
+        updatedAt: existing.updatedAt,
+        author: existing.author
+      };
+
+      const updatedItem: KnowledgeItem = {
+        ...existing,
+        ...itemData,
+        version: existing.version + 1,
+        updatedAt: new Date().toISOString(),
+        versions: [archiveVersion, ...(existing.versions || [])]
+      };
+
+      const updatedKnowledge = knowledge.map(k => k.id === id ? updatedItem : k);
+      setKnowledge(updatedKnowledge);
+      await saveDb({ knowledge: updatedKnowledge });
+    }
+  };
+
+  const deleteKnowledgeItem = async (id: string) => {
+    try {
+      const res = await fetch(`/api/knowledge/${id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to delete knowledge item.");
+      }
+      await refreshDb();
+    } catch (err) {
+      console.warn("Server delete knowledge skipped/failed, simulating locally...", err);
+      const updatedKnowledge = knowledge.filter(k => k.id !== id);
+      setKnowledge(updatedKnowledge);
+      await saveDb({ knowledge: updatedKnowledge });
+    }
+  };
+
+  const queryKnowledgeBase = async (query: string, category?: string): Promise<RagQueryResult> => {
+    try {
+      const res = await fetch("/api/knowledge/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, category })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "RAG query failed.");
+      }
+      return await res.json();
+    } catch (err) {
+      console.warn("Server RAG query skipped/failed, simulating locally...", err);
+      const queryLower = query.toLowerCase();
+      const matched = knowledge.filter(k => 
+        k.title.toLowerCase().includes(queryLower) || 
+        k.content.toLowerCase().includes(queryLower)
+      ).slice(0, 3);
+
+      return {
+        answer: matched.length > 0
+          ? `[Simulation Locale] Synthèse d'apprentissage d'après ${matched.length} document(s) trouvé(s) :\n\n` + matched.map(m => `### ${m.title}\n${m.content}`).join("\n\n")
+          : `Aucune correspondance directe trouvée localement pour "${query}". Rempli via connaissances générales Gemini (Mode simulé local).`,
+        confidenceScore: matched.length > 0 ? 85 : 20,
+        knowledgeSource: matched.length > 0 ? "folo_internal" : "gemini_general",
+        sourcesUsed: matched.map(m => ({ id: m.id, title: m.title, category: m.category, subcategory: m.subcategory }))
+      };
+    }
+  };
+
   return (
     <CRMContext.Provider
       value={{
@@ -1028,6 +1158,7 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         suggestions,
         orchestratorConfig,
         orchestratorPlans,
+        knowledge,
         isLoading,
         error,
         refreshDb,
@@ -1047,7 +1178,11 @@ export const CRMProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateOrchestratorConfig,
         buildOrchestratorPlanAI,
         executeOrchestratorStepAI,
-        triggerOrchestratorLearning
+        triggerOrchestratorLearning,
+        addKnowledgeItem,
+        updateKnowledgeItem,
+        deleteKnowledgeItem,
+        queryKnowledgeBase
       }}
     >
       {children}
